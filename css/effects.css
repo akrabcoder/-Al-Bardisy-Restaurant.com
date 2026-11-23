@@ -1,0 +1,456 @@
+
+/* ========================================
+   AL BARDISI RESTAURANT
+   Effects & Animations
+   ======================================== */
+
+/* ---------- Cursor Glow ---------- */
+
+.cursor-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  background: radial-gradient(
+    circle,
+    rgba(201, 162, 39, 0.10) 0%,
+    rgba(201, 162, 39, 0.04) 40%,
+    transparent 70%
+  );
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  will-change: transform;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body:hover .cursor-glow {
+    opacity: 1;
+  }
+}
+
+/* ---------- Gold Shimmer ---------- */
+
+.gold-shimmer {
+  background: linear-gradient(
+    110deg,
+    #a8861b 0%,
+    #c9a227 25%,
+    #f5df8c 45%,
+    #c9a227 65%,
+    #a8861b 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: goldShimmer 5s linear infinite;
+}
+
+@keyframes goldShimmer {
+  to {
+    background-position: 200% center;
+  }
+}
+
+/* ---------- Floating Animation ---------- */
+
+.float-animation {
+  animation: floating 5s ease-in-out infinite;
+}
+
+@keyframes floating {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+/* ---------- Fade Animations ---------- */
+
+.fade-in {
+  animation: fadeIn 1s ease both;
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.9s ease both;
+}
+
+.fade-in-down {
+  animation: fadeInDown 0.9s ease both;
+}
+
+.fade-in-left {
+  animation: fadeInLeft 0.9s ease both;
+}
+
+.fade-in-right {
+  animation: fadeInRight 0.9s ease both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(35px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(35px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-35px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ---------- Stagger Delays ---------- */
+
+.delay-1 {
+  animation-delay: 0.1s;
+}
+
+.delay-2 {
+  animation-delay: 0.2s;
+}
+
+.delay-3 {
+  animation-delay: 0.3s;
+}
+
+.delay-4 {
+  animation-delay: 0.4s;
+}
+
+.delay-5 {
+  animation-delay: 0.5s;
+}
+
+/* ---------- Scroll Reveal ---------- */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(35px);
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-left {
+  opacity: 0;
+  transform: translateX(45px);
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s ease;
+}
+
+.reveal-left.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-right {
+  opacity: 0;
+  transform: translateX(-45px);
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s ease;
+}
+
+.reveal-right.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.92);
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s ease;
+}
+
+.reveal-scale.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ---------- Button Shine ---------- */
+
+.btn-shine,
+.menu-card-order,
+.branch-action {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shine::before,
+.menu-card-order::before,
+.branch-action::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -100%;
+  width: 50%;
+  height: 200%;
+  transform: rotate(25deg);
+  background: rgba(255, 255, 255, 0.18);
+  transition: left 0.65s ease;
+  pointer-events: none;
+}
+
+.btn-shine:hover::before,
+.menu-card-order:hover::before,
+.branch-action:hover::before {
+  left: 150%;
+}
+
+/* ---------- Image Hover ---------- */
+
+.image-hover {
+  overflow: hidden;
+}
+
+.image-hover img {
+  transition:
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.5s ease;
+}
+
+.image-hover:hover img {
+  transform: scale(1.08);
+  filter: brightness(1.08);
+}
+
+/* ---------- Menu Card Hover ---------- */
+
+.menu-card {
+  transition:
+    transform 0.45s ease,
+    border-color 0.45s ease,
+    box-shadow 0.45s ease;
+}
+
+.menu-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(201, 162, 39, 0.65);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+}
+
+.menu-card-image img {
+  transition: transform 0.7s ease;
+}
+
+.menu-card:hover .menu-card-image img {
+  transform: scale(1.06);
+}
+
+/* ---------- Branch Hover ---------- */
+
+.branch-card {
+  transition:
+    transform 0.4s ease,
+    border-color 0.4s ease,
+    background 0.4s ease;
+}
+
+.branch-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(201, 162, 39, 0.55);
+  background: #30261d;
+}
+
+/* ---------- Navigation Underline ---------- */
+
+.main-nav a {
+  position: relative;
+}
+
+.main-nav a::after {
+  content: "";
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--gold);
+  transform: translateX(-50%);
+  transition: width 0.3s ease;
+}
+
+.main-nav a:hover::after,
+.main-nav a.active::after {
+  width: 65%;
+}
+
+/* ---------- Gold Border Glow ---------- */
+
+.gold-border-glow {
+  box-shadow:
+    0 0 0 1px rgba(201, 162, 39, 0.25),
+    0 0 25px rgba(201, 162, 39, 0.08);
+  transition: box-shadow 0.4s ease;
+}
+
+.gold-border-glow:hover {
+  box-shadow:
+    0 0 0 1px rgba(201, 162, 39, 0.65),
+    0 0 35px rgba(201, 162, 39, 0.18);
+}
+
+/* ---------- Background Decoration ---------- */
+
+.gold-orb {
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(201, 162, 39, 0.13),
+    transparent 70%
+  );
+  pointer-events: none;
+  filter: blur(15px);
+  animation: orbFloat 9s ease-in-out infinite;
+}
+
+@keyframes orbFloat {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  50% {
+    transform: translate(25px, -20px);
+  }
+}
+
+/* ---------- Toast Animation ---------- */
+
+.bardisi-toast {
+  position: fixed;
+  bottom: 25px;
+  left: 50%;
+  z-index: 10000;
+  max-width: calc(100% - 30px);
+  padding: 13px 22px;
+  border: 1px solid rgba(201, 162, 39, 0.5);
+  border-radius: 8px;
+  background: #261f18;
+  color: #f4eee4;
+  font-size: 14px;
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, 20px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease,
+    visibility 0.3s ease;
+}
+
+.bardisi-toast.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+
+/* ---------- Reduced Motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .reveal,
+  .reveal-left,
+  .reveal-right,
+  .reveal-scale {
+    opacity: 1;
+    transform: none;
+  }
+
+  .cursor-glow,
+  .gold-orb {
+    display: none;
+  }
+}
+
+/* ---------- Mobile Optimization ---------- */
+
+@media (max-width: 768px) {
+  .cursor-glow {
+    display: none;
+  }
+
+  .menu-card:hover,
+  .branch-card:hover {
+    transform: none;
+  }
+
+  .gold-orb {
+    width: 150px;
+    height: 150px;
+  }
+}
