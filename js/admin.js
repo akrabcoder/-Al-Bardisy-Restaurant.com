@@ -1,1196 +1,894 @@
 
-/* =========================================
-   AL BARDISI - ADMIN DASHBOARD
-   Main JavaScript
-   ========================================= */
+/* ========================================
+   AL BARDISI RESTAURANT
+   Admin Control Center
+   Cloudflare Worker + GitHub API
+   ======================================== */
 
 (() => {
-    'use strict';
+  "use strict";
 
-    /* =========================================
-       1. CONFIGURATION
-       ========================================= */
+  const CONFIG = {
+    workerUrlKey: "bardisi_admin_worker_url",
+    tokenKey: "bardisi_admin_token",
+    defaultWorkerUrl: "",
+    tokenExpiryKey: "bardisi_admin_token_expiry"
+  };
 
-    const CONFIG = {
-        workerUrlKey: 'bardisi_admin_worker_url',
-        apiTimeout: 20000,
-        currency: 'جنيه'
-    };
+  const state = {
+    data: null,
+    editingProductId: null,
+    editingBranchId: null,
+    busy: false
+  };
 
-    const API = {
-        login: '/api/login',
-        logout: '/api/logout',
-        content: '/api/content'
-    };
+  const $ = (selector, parent = document) =>
+    parent.querySelector(selector);
 
-    let siteData = {};
-    let isAuthenticated = false;
-    let editingProductId = null;
-    let editingBranchId = null;
-    let toastTimeout = null;
+  const $$ = (selector, parent = document) =>
+    [...parent.querySelectorAll(selector)];
 
+  const getWorkerUrl = () =>
+    (localStorage.getItem(CONFIG.workerUrlKey) ||
+      CONFIG.defaultWorkerUrl).trim().replace(/\/+$/, "");
 
-    /* =========================================
-       2. DOM HELPERS
-       ========================================= */
+  const getToken = () =>
+    localStorage.getItem(CONFIG.tokenKey);
 
-    const $ = (selector) => document.querySelector(selector);
+  function setConnection(status, label) {
+    const element = $("#connectionStatus");
+    const overview = $("#overviewConnection");
 
-    const getValue = (id) => {
-        const element = document.getElementById(id);
-        return element ? element.value.trim() : '';
-    };
+    if (element) {
+      element.classList.remove("connected", "error");
+      if (status === "connected") element.classList.add("connected");
+      if (status === "error") element.classList.add("error");
 
-    const setValue = (id, value) => {
-        const element = document.getElementById(id);
-
-        if (element) {
-            element.value = value ?? '';
-        }
-    };
-
-    const createElement = (tag, className, text) => {
-        const element = document.createElement(tag);
-
-        if (className) {
-            element.className = className;
-        }
-
-        if (text !== undefined && text !== null) {
-            element.textContent = String(text);
-        }
-
-        return element;
-    };
-
-    const createButton = (text, className, onClick) => {
-        const button = createElement('button', className, text);
-        button.type = 'button';
-        button.addEventListener('click', onClick);
-
-        return button;
-    };
-
-
-    /* =========================================
-       3. TOAST NOTIFICATIONS
-       ========================================= */
-
-    function showToast(message, type = 'success') {
-        const toast = $('#toast');
-
-        if (!toast) return;
-
-        toast.textContent = message;
-        toast.classList.add('show');
-
-        toast.style.borderColor =
-            type === 'error' ? '#D75B52' : '#C9A227';
-
-        clearTimeout(toastTimeout);
-
-        toastTimeout = setTimeout(() => {
-            toast.classList.remove('show');
-        }, 3500);
+      element.innerHTML = "";
+      const dot = document.createElement("i");
+      element.append(dot, document.createTextNode(label));
     }
 
+    if (overview) {
+      overview.textContent = label;
+      overview.style.color =
+        status === "connected" ? "var(--success)" :
+        status === "error" ? "var(--danger)" : "var(--muted)";
+    }
+  }
 
-    /* =========================================
-       4. API HELPERS
-       ========================================= */
+  function toast(message, duration = 3000) {
+    const element = $("#toast");
+    if (!element) return;
 
-    function getWorkerUrl() {
-        return (
-            localStorage.getItem(CONFIG.workerUrlKey) || ''
-        ).replace(/\/+$/, '');
+    element.textContent = message;
+    element.classList.add("show");
+
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => {
+      element.classList.remove("show");
+    }, duration);
+  }
+
+  function makeId(prefix = "item") {
+    if (window.crypto?.randomUUID) {
+      return `${prefix}_${crypto.randomUUID()}`;
     }
 
-    function getApiUrl(endpoint) {
-        const baseUrl = getWorkerUrl();
+    return `${prefix}_${Date.now()}_${Math.random()
+      .toString(36).slice(2, 8)}`;
+  }
 
-        if (!baseUrl) {
-            throw new Error('أضف رابط Cloudflare Worker من الإعدادات أولاً.');
-        }
+  function showLogin(message = "") {
+    $("#loginScreen").hidden = false;
+    $("#dashboard").hidden = true;
 
-        return baseUrl + endpoint;
+    const messageElement = $("#loginMessage");
+    if (messageElement) messageElement.textContent = message;
+  }
+
+  function showDashboard() {
+    $("#loginScreen").hidden = true;
+    $("#dashboard").hidden = false;
+  }
+
+  function clearSession() {
+    localStorage.removeItem(CONFIG.tokenKey);
+    localStorage.removeItem(CONFIG.tokenExpiryKey);
+  }
+
+  function saveSession(token, expiresIn) {
+    localStorage.setItem(CONFIG.tokenKey, token);
+
+    const expiry = Date.now() + (Number(expiresIn) || 3600) * 1000;
+    localStorage.setItem(CONFIG.tokenExpiryKey, String(expiry));
+  }
+
+  function sessionIsExpired() {
+    const expiry = Number(
+      localStorage.getItem(CONFIG.tokenExpiryKey) || 0
+    );
+
+    return expiry > 0 && Date.now() >= expiry;
+  }
+
+  /* ========================================
+     API CLIENT
+     ======================================== */
+
+  async function api(path, options = {}) {
+    const baseUrl = getWorkerUrl();
+
+    if (!baseUrl) {
+      throw new Error("أدخل رابط Cloudflare Worker من الإعدادات أولًا.");
     }
 
-    async function apiRequest(endpoint, options = {}) {
-        const controller = new AbortController();
+    const headers = {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    };
 
-        const timeout = setTimeout(() => {
-            controller.abort();
-        }, CONFIG.apiTimeout);
+    if (options.auth !== false) {
+      const token = getToken();
 
+      if (!token) {
+        throw new Error("انتهت جلسة الإدارة. سجّل الدخول مرة أخرى.");
+      }
+
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${baseUrl}${path}`, {
+      method: options.method || "GET",
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+      cache: "no-store"
+    });
+
+    let result = {};
+
+    try {
+      result = await response.json();
+    } catch {
+      result = {};
+    }
+
+    if (response.status === 401 || response.status === 403) {
+      clearSession();
+      showLogin("انتهت صلاحية الجلسة أو بيانات الدخول غير صالحة.");
+      throw new Error("انتهت جلسة الإدارة. سجّل الدخول مرة أخرى.");
+    }
+
+    if (!response.ok || result.success === false) {
+      throw new Error(
+        result.error || result.message || `خطأ في الاتصال (${response.status})`
+      );
+    }
+
+    return result;
+  }
+
+  async function login(password) {
+    const result = await api("/api/login", {
+      method: "POST",
+      auth: false,
+      body: { password }
+    });
+
+    if (!result.token) {
+      throw new Error("الخادم لم يُرجع رمز الدخول.");
+    }
+
+    saveSession(result.token, result.expiresIn);
+    return result;
+  }
+
+  async function logout() {
+    try {
+      if (getToken()) {
+        await api("/api/logout", { method: "POST" });
+      }
+    } catch (error) {
+      console.warn("Logout request:", error.message);
+    }
+
+    clearSession();
+    state.data = null;
+    showLogin();
+    setConnection("offline", "غير متصل");
+    toast("تم تسجيل الخروج");
+  }
+
+  async function fetchContent() {
+    const result = await api("/api/content");
+
+    if (!result.data || typeof result.data !== "object") {
+      throw new Error("صيغة بيانات الموقع غير صحيحة.");
+    }
+
+    state.data = result.data;
+    normalizeData();
+    renderAll();
+    setConnection("connected", "متصل");
+  }
+
+  async function saveContent(successMessage = "تم حفظ التغييرات بنجاح") {
+    if (state.busy) return;
+
+    state.busy = true;
+
+    try {
+      const result = await api("/api/content", {
+        method: "PUT",
+        body: { data: state.data }
+      });
+
+      if (result.data && typeof result.data === "object") {
+        state.data = result.data;
+      }
+
+      normalizeData();
+      renderAll();
+      setConnection("connected", "متصل");
+      toast(successMessage);
+
+    } catch (error) {
+      console.error(error);
+      toast(error.message || "تعذر حفظ البيانات", 4500);
+
+      if (!getToken()) {
+        showLogin("سجّل الدخول مرة أخرى.");
+      }
+    } finally {
+      state.busy = false;
+    }
+  }
+
+  /* ========================================
+     DATA NORMALIZATION
+     ======================================== */
+
+  function normalizeData() {
+    if (!state.data) state.data = {};
+
+    if (!Array.isArray(state.data.menu)) {
+      state.data.menu = [];
+    }
+
+    if (!Array.isArray(state.data.branches)) {
+      state.data.branches = [];
+    }
+
+    if (!state.data.contact || typeof state.data.contact !== "object") {
+      state.data.contact = {};
+    }
+
+    if (!state.data.content || typeof state.data.content !== "object") {
+      state.data.content = {};
+    }
+
+    if (!state.data.settings || typeof state.data.settings !== "object") {
+      state.data.settings = {};
+    }
+  }
+
+  /* ========================================
+     NAVIGATION
+     ======================================== */
+
+  const sectionTitles = {
+    overview: "نظرة عامة",
+    menu: "قائمة الطعام",
+    branches: "الفروع",
+    contact: "بيانات التواصل",
+    content: "محتوى الموقع",
+    settings: "الإعدادات"
+  };
+
+  function openSection(name) {
+    const section = $(`#section-${name}`);
+    if (!section) return;
+
+    $$(".dashboard-section").forEach((item) => {
+      item.classList.toggle("active", item === section);
+    });
+
+    $$(".nav-item[data-section]").forEach((item) => {
+      item.classList.toggle(
+        "active",
+        item.dataset.section === name
+      );
+    });
+
+    $("#pageTitle").textContent = sectionTitles[name] || "الإدارة";
+    $("#sidebar").classList.remove("open");
+  }
+
+  function initNavigation() {
+    $$(".nav-item[data-section]").forEach((button) => {
+      button.addEventListener("click", () => {
+        openSection(button.dataset.section);
+      });
+    });
+
+    $$("[data-open-section]").forEach((button) => {
+      button.addEventListener("click", () => {
+        openSection(button.dataset.openSection);
+      });
+    });
+
+    $("#mobileMenuButton")?.addEventListener("click", () => {
+      $("#sidebar").classList.toggle("open");
+    });
+
+    document.addEventListener("click", (event) => {
+      const sidebar = $("#sidebar");
+      const menuButton = $("#mobileMenuButton");
+
+      if (
+        sidebar?.classList.contains("open") &&
+        !sidebar.contains(event.target) &&
+        !menuButton?.contains(event.target)
+      ) {
+        sidebar.classList.remove("open");
+      }
+    });
+  }
+
+  /* ========================================
+     DASHBOARD
+     ======================================== */
+
+  function renderOverview() {
+    $("#totalProducts").textContent = state.data.menu.length;
+    $("#totalBranches").textContent = state.data.branches.length;
+  }
+
+  function renderAll() {
+    renderOverview();
+    renderProducts();
+    renderBranches();
+    fillContactForm();
+    fillContentForm();
+  }
+
+  /* ========================================
+     PRODUCTS
+     ======================================== */
+
+  function renderProducts() {
+    const container = $("#productsTable");
+    if (!container) return;
+
+    container.replaceChildren();
+
+    if (!state.data.menu.length) {
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+
+      cell.colSpan = 5;
+      cell.className = "empty-cell";
+      cell.textContent = "لا توجد أصناف حتى الآن. ابدأ بإضافة أول صنف.";
+
+      row.appendChild(cell);
+      container.appendChild(row);
+      return;
+    }
+
+    state.data.menu.forEach((product) => {
+      const row = document.createElement("tr");
+
+      const productCell = document.createElement("td");
+      const productInfo = document.createElement("div");
+      productInfo.className = "product-cell";
+
+      if (product.image) {
         try {
-            const response = await fetch(getApiUrl(endpoint), {
-                ...options,
-
-                credentials: 'include',
-
-                signal: controller.signal,
-
-                headers: {
-                    ...(options.body ? {
-                        'Content-Type': 'application/json'
-                    } : {}),
-
-                    ...options.headers
-                }
-            });
-
-            const rawText = await response.text();
-
-            let result = {};
-
-            if (rawText) {
-                try {
-                    result = JSON.parse(rawText);
-                } catch {
-                    result = {
-                        message: rawText
-                    };
-                }
-            }
-
-            if (!response.ok) {
-                const error = new Error(
-                    result.message ||
-                    result.error ||
-                    `حدث خطأ في الاتصال (${response.status})`
-                );
-
-                error.status = response.status;
-
-                throw error;
-            }
-
-            return result;
-
-        } catch (error) {
-
-            if (error.name === 'AbortError') {
-                throw new Error('انتهت مهلة الاتصال بالخادم.');
-            }
-
-            if (error instanceof TypeError) {
-                throw new Error(
-                    'تعذر الاتصال بالخادم. راجع الرابط واتصال الإنترنت.'
-                );
-            }
-
-            throw error;
-
-        } finally {
-            clearTimeout(timeout);
-        }
-    }
-
-
-    /* =========================================
-       5. DATA NORMALIZATION
-       ========================================= */
-
-    function normalizeData(data) {
-        const safeData =
-            data && typeof data === 'object' ? data : {};
-
-        return {
-            ...safeData,
-
-            menu: Array.isArray(safeData.menu)
-                ? safeData.menu
-                : [],
-
-            branches: Array.isArray(safeData.branches)
-                ? safeData.branches
-                : [],
-
-            contact: {
-                phone: '',
-                whatsapp: '',
-                facebook: '',
-                instagram: '',
-                tiktok: '',
-                ...(safeData.contact || {})
-            },
-
-            content: {
-                heroTitleAr: '',
-                heroTitleEn: '',
-                heroDescriptionAr: '',
-                heroDescriptionEn: '',
-                aboutTextAr: '',
-                aboutTextEn: '',
-                ...(safeData.content || {})
-            }
-        };
-    }
-
-
-    /* =========================================
-       6. AUTHENTICATION
-       ========================================= */
-
-    async function login(password) {
-        const button = $('#loginButton');
-        const message = $('#loginMessage');
-
-        if (!password) {
-            if (message) {
-                message.textContent = 'اكتب كلمة المرور أولاً.';
-            }
-
-            return;
-        }
-
-        button.disabled = true;
-        button.textContent = 'جاري تسجيل الدخول...';
-
-        if (message) {
-            message.textContent = '';
-        }
-
-        try {
-            await apiRequest(API.login, {
-                method: 'POST',
-
-                body: JSON.stringify({
-                    password
-                })
-            });
-
-            const result = await loadSiteData();
-
-            if (!result) {
-                throw new Error('تم تسجيل الدخول لكن تعذر تحميل بيانات الموقع.');
-            }
-
-            isAuthenticated = true;
-
-            showDashboard();
-
-            showToast('تم تسجيل الدخول بنجاح.');
-
-        } catch (error) {
-
-            if (message) {
-                message.textContent = error.message;
-            }
-
-            isAuthenticated = false;
-
-        } finally {
-
-            button.disabled = false;
-            button.textContent = 'تسجيل الدخول';
-
-        }
-    }
-
-
-    async function logout() {
-        try {
-            await apiRequest(API.logout, {
-                method: 'POST'
-            });
-
-        } catch (error) {
-            console.warn('Logout request:', error.message);
-
-        } finally {
-            isAuthenticated = false;
-            siteData = {};
-
-            $('#dashboard')?.classList.add('hidden');
-            $('#loginScreen')?.classList.remove('hidden');
-
-            setValue('adminPassword', '');
-
-            showToast('تم تسجيل الخروج.');
-        }
-    }
-
-
-    function showDashboard() {
-        $('#loginScreen')?.classList.add('hidden');
-        $('#dashboard')?.classList.remove('hidden');
-
-        updateDashboardStats();
-        renderProducts();
-        renderBranches();
-        fillContactForm();
-        fillContentForm();
-    }
-
-
-    async function checkExistingSession() {
-        if (!getWorkerUrl()) return;
-
-        try {
-            const result = await loadSiteData();
-
-            if (result) {
-                isAuthenticated = true;
-                showDashboard();
-            }
-
-        } catch (error) {
-            console.info('No active admin session:', error.message);
-        }
-    }
-
-
-    /* =========================================
-       7. LOAD AND SAVE SITE DATA
-       ========================================= */
-
-    async function loadSiteData() {
-        const result = await apiRequest(API.content, {
-            method: 'GET'
-        });
-
-        const data = result.data || result.content || result;
-
-        siteData = normalizeData(data);
-
-        updateDashboardStats();
-        renderProducts();
-        renderBranches();
-        fillContactForm();
-        fillContentForm();
-
-        const status = $('#connectionStatus');
-
-        if (status) {
-            status.textContent = 'تم الاتصال بالخادم وتحميل البيانات بنجاح.';
-        }
-
-        return true;
-    }
-
-
-    async function saveSiteData(successMessage = 'تم حفظ التعديلات بنجاح.') {
-        if (!isAuthenticated) {
-            showToast('سجّل الدخول أولاً.', 'error');
-            return false;
-        }
-
-        try {
-            await apiRequest(API.content, {
-                method: 'PUT',
-
-                body: JSON.stringify({
-                    data: siteData
-                })
-            });
-
-            updateDashboardStats();
-
-            showToast(successMessage);
-
-            return true;
-
-        } catch (error) {
-            showToast(error.message, 'error');
-            return false;
-        }
-    }
-
-
-    /* =========================================
-       8. DASHBOARD NAVIGATION
-       ========================================= */
-
-    const sectionTitles = {
-        overview: 'الرئيسية',
-        menu: 'إدارة المنيو',
-        branches: 'الفروع',
-        contact: 'بيانات التواصل',
-        content: 'محتوى الموقع',
-        settings: 'الإعدادات'
+          const imageUrl = new URL(product.image);
+
+          if (["http:", "https:"].includes(imageUrl.protocol)) {
+            const image = document.createElement("img");
+            image.className = "product-thumbnail";
+            image.src = imageUrl.href;
+            image.alt = "";
+            image.loading = "lazy";
+            productInfo.appendChild(image);
+          }
+        } catch {}
+      }
+
+      const name = document.createElement("strong");
+      name.textContent = product.nameAr || product.nameEn || "صنف بدون اسم";
+      productInfo.appendChild(name);
+      productCell.appendChild(productInfo);
+
+      const category = document.createElement("td");
+      category.textContent = product.category || "—";
+
+      const price = document.createElement("td");
+      price.textContent =
+        product.price !== undefined && product.price !== ""
+          ? `${product.price} جنيه`
+          : "—";
+
+      const statusCell = document.createElement("td");
+      const status = document.createElement("span");
+      status.className = `status-pill ${product.active === false ? "off" : "on"}`;
+      status.textContent = product.active === false ? "مخفي" : "ظاهر";
+      statusCell.appendChild(status);
+
+      const actions = document.createElement("td");
+      const actionWrap = document.createElement("div");
+      actionWrap.className = "table-actions";
+
+      const edit = document.createElement("button");
+      edit.className = "table-action edit-action";
+      edit.textContent = "تعديل";
+      edit.type = "button";
+      edit.addEventListener("click", () => openProductModal(product.id));
+
+      const remove = document.createElement("button");
+      remove.className = "table-action delete-action";
+      remove.textContent = "حذف";
+      remove.type = "button";
+      remove.addEventListener("click", () => deleteProduct(product.id));
+
+      actionWrap.append(edit, remove);
+      actions.appendChild(actionWrap);
+
+      row.append(productCell, category, price, statusCell, actions);
+      container.appendChild(row);
+    });
+  }
+
+  function openProductModal(id = null) {
+    const product = id
+      ? state.data.menu.find((item) => String(item.id) === String(id))
+      : null;
+
+    state.editingProductId = product?.id || null;
+
+    $("#productModalTitle").textContent =
+      product ? "تعديل بيانات الصنف" : "إضافة صنف جديد";
+
+    $("#productId").value = product?.id || "";
+    $("#productNameAr").value = product?.nameAr || "";
+    $("#productNameEn").value = product?.nameEn || "";
+    $("#productCategory").value = product?.category || "";
+    $("#productPrice").value = product?.price ?? "";
+    $("#productDescriptionAr").value = product?.descriptionAr || "";
+    $("#productDescriptionEn").value = product?.descriptionEn || "";
+    $("#productImage").value = product?.image || "";
+    $("#productActive").checked = product?.active !== false;
+
+    $("#productModal").hidden = false;
+    $("#productNameAr").focus();
+  }
+
+  async function saveProduct(event) {
+    event.preventDefault();
+
+    const id = state.editingProductId || makeId("product");
+
+    const product = {
+      id,
+      nameAr: $("#productNameAr").value.trim(),
+      nameEn: $("#productNameEn").value.trim(),
+      category: $("#productCategory").value.trim(),
+      price: $("#productPrice").value === ""
+        ? ""
+        : Number($("#productPrice").value),
+      descriptionAr: $("#productDescriptionAr").value.trim(),
+      descriptionEn: $("#productDescriptionEn").value.trim(),
+      image: $("#productImage").value.trim(),
+      active: $("#productActive").checked
     };
 
-
-    function openSection(sectionName) {
-        if (!sectionTitles[sectionName]) return;
-
-        document.querySelectorAll('.dashboard-section')
-            .forEach(section => {
-                section.classList.remove('active');
-            });
-
-        document.querySelectorAll('.nav-item')
-            .forEach(button => {
-                button.classList.toggle(
-                    'active',
-                    button.dataset.section === sectionName
-                );
-            });
-
-        const section = $(`#section-${sectionName}`);
-
-        if (section) {
-            section.classList.add('active');
-        }
-
-        const title = $('#pageTitle');
-
-        if (title) {
-            title.textContent = sectionTitles[sectionName];
-        }
-
-        $('#sidebar')?.classList.remove('mobile-open');
+    if (!product.nameAr) {
+      toast("اكتب اسم الصنف بالعربية.");
+      return;
     }
 
-
-    function initializeNavigation() {
-        document.querySelectorAll('.nav-item').forEach(button => {
-            button.addEventListener('click', () => {
-                openSection(button.dataset.section);
-            });
-        });
-
-        document.querySelectorAll('[data-goto]').forEach(button => {
-            button.addEventListener('click', () => {
-                openSection(button.dataset.goto);
-            });
-        });
-
-        $('#mobileMenuButton')?.addEventListener('click', () => {
-            $('#sidebar')?.classList.toggle('mobile-open');
-        });
-
-        $('#refreshButton')?.addEventListener('click', async () => {
-            if (!isAuthenticated) return;
-
-            try {
-                await loadSiteData();
-                showToast('تم تحديث البيانات.');
-
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-        });
-    }
-
-
-    /* =========================================
-       9. DASHBOARD STATISTICS
-       ========================================= */
-
-    function updateDashboardStats() {
-        const products = siteData.menu || [];
-        const branches = siteData.branches || [];
-
-        const productsCount = $('#totalProducts');
-        const branchesCount = $('#totalBranches');
-
-        if (productsCount) {
-            productsCount.textContent = products.length;
-        }
-
-        if (branchesCount) {
-            branchesCount.textContent = branches.length;
-        }
-    }
-
-
-    /* =========================================
-       10. MENU MANAGEMENT
-       ========================================= */
-
-    function renderProducts() {
-        const table = $('#productsTable');
-
-        if (!table) return;
-
-        table.replaceChildren();
-
-        if (!siteData.menu.length) {
-            const row = createElement('tr');
-            const cell = createElement(
-                'td',
-                '',
-                'لا توجد منتجات حالياً.'
-            );
-
-            cell.colSpan = 5;
-            cell.style.textAlign = 'center';
-
-            row.appendChild(cell);
-            table.appendChild(row);
-
-            return;
-        }
-
-        siteData.menu.forEach(product => {
-            const row = createElement('tr');
-
-            const imageCell = createElement('td');
-            const image = createElement('img', 'product-thumbnail');
-
-            image.src = isSafeImageUrl(product.image)
-                ? product.image
-                : '';
-
-            image.alt = product.nameAr || 'صورة المنتج';
-            image.loading = 'lazy';
-
-            image.addEventListener('error', () => {
-                image.removeAttribute('src');
-                image.alt = 'لا توجد صورة';
-            });
-
-            imageCell.appendChild(image);
-
-            const nameCell = createElement(
-                'td',
-                '',
-                product.nameAr || product.name || 'بدون اسم'
-            );
-
-            const categoryCell = createElement(
-                'td',
-                '',
-                product.category || 'غير محدد'
-            );
-
-            const priceCell = createElement(
-                'td',
-                '',
-                `${product.price ?? 0} ${CONFIG.currency}`
-            );
-
-            const actionsCell = createElement('td');
-
-            const editButton = createButton(
-                'تعديل',
-                'table-action edit-action',
-                () => editProduct(product.id)
-            );
-
-            const deleteButton = createButton(
-                'حذف',
-                'table-action delete-action',
-                () => deleteProduct(product.id)
-            );
-
-            actionsCell.append(editButton, deleteButton);
-
-            row.append(
-                imageCell,
-                nameCell,
-                categoryCell,
-                priceCell,
-                actionsCell
-            );
-
-            table.appendChild(row);
-        });
-    }
-
-
-    function openProductModal(product = null) {
-        editingProductId = product ? product.id : null;
-
-        $('#productModalTitle').textContent = product
-            ? 'تعديل المنتج'
-            : 'إضافة منتج';
-
-        setValue('productId', product?.id || '');
-        setValue('productNameAr', product?.nameAr || '');
-        setValue('productNameEn', product?.nameEn || '');
-        setValue('productCategory', product?.category || '');
-        setValue('productPrice', product?.price ?? '');
-        setValue('productImage', product?.image || '');
-        setValue('productDescriptionAr', product?.descriptionAr || '');
-        setValue('productDescriptionEn', product?.descriptionEn || '');
-
-        $('#productModal')?.classList.add('active');
-    }
-
-
-    function editProduct(id) {
-        const product = siteData.menu.find(item => item.id === id);
-
-        if (!product) return;
-
-        openProductModal(product);
-    }
-
-
-    async function deleteProduct(id) {
-        const product = siteData.menu.find(item => item.id === id);
-
-        if (!product) return;
-
-        const confirmed = window.confirm(
-            `هل أنت متأكد من حذف "${product.nameAr || product.name}"؟`
-        );
-
-        if (!confirmed) return;
-
-        const previousMenu = [...siteData.menu];
-
-        siteData.menu = siteData.menu.filter(item => item.id !== id);
-
-        const saved = await saveSiteData('تم حذف المنتج.');
-
-        if (!saved) {
-            siteData.menu = previousMenu;
-        }
-
-        renderProducts();
-    }
-
-
-    async function saveProduct(event) {
-        event.preventDefault();
-
-        const nameAr = getValue('productNameAr');
-        const nameEn = getValue('productNameEn');
-        const category = getValue('productCategory');
-        const price = Number(getValue('productPrice'));
-        const image = getValue('productImage');
-
-        if (!nameAr || !nameEn || !category) {
-            showToast('أكمل بيانات المنتج.', 'error');
-            return;
-        }
-
-        if (!Number.isFinite(price) || price < 0) {
-            showToast('أدخل سعراً صحيحاً.', 'error');
-            return;
-        }
-
-        if (image && !isSafeImageUrl(image)) {
-            showToast('رابط الصورة غير صالح.', 'error');
-            return;
-        }
-
-        const product = {
-            id: editingProductId || createId(),
-
-            nameAr,
-            nameEn,
-            category,
-            price,
-
-            image,
-
-            descriptionAr: getValue('productDescriptionAr'),
-            descriptionEn: getValue('productDescriptionEn')
-        };
-
-        const previousMenu = [...siteData.menu];
-
-        if (editingProductId) {
-            siteData.menu = siteData.menu.map(item =>
-                item.id === editingProductId ? product : item
-            );
-
-        } else {
-            siteData.menu.push(product);
-        }
-
-        const saved = await saveSiteData(
-            editingProductId
-                ? 'تم تعديل المنتج.'
-                : 'تمت إضافة المنتج.'
-        );
-
-        if (!saved) {
-            siteData.menu = previousMenu;
-            renderProducts();
-            return;
-        }
-
-        renderProducts();
-        closeModal('productModal');
-        $('#productForm')?.reset();
-        editingProductId = null;
-    }
-
-
-    /* =========================================
-       11. BRANCH MANAGEMENT
-       ========================================= */
-
-    function renderBranches() {
-        const container = $('#branchesList');
-
-        if (!container) return;
-
-        container.replaceChildren();
-
-        if (!siteData.branches.length) {
-            container.appendChild(
-                createElement('p', '', 'لا توجد فروع مسجلة حالياً.')
-            );
-
-            return;
-        }
-
-        siteData.branches.forEach(branch => {
-            const card = createElement('article', 'branch-card');
-
-            const heading = createElement(
-                'h3',
-                '',
-                branch.name || 'فرع جديد'
-            );
-
-            const address = createElement(
-                'p',
-                '',
-                `العنوان: ${branch.addressAr || 'غير محدد'}`
-            );
-
-            const phone = createElement(
-                'p',
-                '',
-                `الهاتف: ${branch.phone || 'غير محدد'}`
-            );
-
-            const map = createElement(
-                'p',
-                '',
-                `الخريطة: ${branch.map || 'غير مضافة'}`
-            );
-
-            const actions = createElement('div', 'branch-actions');
-
-            const editButton = createButton(
-                'تعديل',
-                'table-action edit-action',
-                () => editBranch(branch.id)
-            );
-
-            const deleteButton = createButton(
-                'حذف',
-                'table-action delete-action',
-                () => deleteBranch(branch.id)
-            );
-
-            actions.append(editButton, deleteButton);
-
-            card.append(
-                heading,
-                address,
-                phone,
-                map,
-                actions
-            );
-
-            container.appendChild(card);
-        });
-    }
-
-
-    function openBranchModal(branch = null) {
-        editingBranchId = branch ? branch.id : null;
-
-        $('#branchModalTitle').textContent = branch
-            ? 'تعديل الفرع'
-            : 'إضافة فرع';
-
-        setValue('branchId', branch?.id || '');
-        setValue('branchName', branch?.name || '');
-        setValue('branchAddressAr', branch?.addressAr || '');
-        setValue('branchAddressEn', branch?.addressEn || '');
-        setValue('branchPhone', branch?.phone || '');
-        setValue('branchMap', branch?.map || '');
-
-        $('#branchModal')?.classList.add('active');
-    }
-
-
-    function editBranch(id) {
-        const branch = siteData.branches.find(item => item.id === id);
-
-        if (!branch) return;
-
-        openBranchModal(branch);
-    }
-
-
-    async function deleteBranch(id) {
-        const branch = siteData.branches.find(item => item.id === id);
-
-        if (!branch) return;
-
-        const confirmed = window.confirm(
-            `هل تريد حذف فرع "${branch.name}"؟`
-        );
-
-        if (!confirmed) return;
-
-        const previousBranches = [...siteData.branches];
-
-        siteData.branches = siteData.branches.filter(
-            item => item.id !== id
-        );
-
-        const saved = await saveSiteData('تم حذف الفرع.');
-
-        if (!saved) {
-            siteData.branches = previousBranches;
-        }
-
-        renderBranches();
-    }
-
-
-    async function saveBranch(event) {
-        event.preventDefault();
-
-        const name = getValue('branchName');
-        const addressAr = getValue('branchAddressAr');
-        const addressEn = getValue('branchAddressEn');
-        const phone = getValue('branchPhone');
-        const map = getValue('branchMap');
-
-        if (!name || !addressAr) {
-            showToast('أدخل اسم الفرع والعنوان.', 'error');
-            return;
-        }
-
-        if (map && !isSafeHttpUrl(map)) {
-            showToast('رابط الخريطة غير صالح.', 'error');
-            return;
-        }
-
-        const branch = {
-            id: editingBranchId || createId(),
-            name,
-            addressAr,
-            addressEn,
-            phone,
-            map
-        };
-
-        const previousBranches = [...siteData.branches];
-
-        if (editingBranchId) {
-            siteData.branches = siteData.branches.map(item =>
-                item.id === editingBranchId ? branch : item
-            );
-
-        } else {
-            siteData.branches.push(branch);
-        }
-
-        const saved = await saveSiteData(
-            editingBranchId
-                ? 'تم تعديل الفرع.'
-                : 'تمت إضافة الفرع.'
-        );
-
-        if (!saved) {
-            siteData.branches = previousBranches;
-            renderBranches();
-            return;
-        }
-
-        renderBranches();
-        closeModal('branchModal');
-        $('#branchForm')?.reset();
-        editingBranchId = null;
-    }
-
-
-    /* =========================================
-       12. CONTACT INFORMATION
-       ========================================= */
-
-    function fillContactForm() {
-        const contact = siteData.contact || {};
-
-        setValue('phone', contact.phone);
-        setValue('whatsapp', contact.whatsapp);
-        setValue('facebook', contact.facebook);
-        setValue('instagram', contact.instagram);
-        setValue('tiktok', contact.tiktok);
-    }
-
-
-    async function saveContact(event) {
-        event.preventDefault();
-
-        const contact = {
-            phone: getValue('phone'),
-            whatsapp: getValue('whatsapp'),
-            facebook: getValue('facebook'),
-            instagram: getValue('instagram'),
-            tiktok: getValue('tiktok')
-        };
-
-        const links = [
-            contact.facebook,
-            contact.instagram,
-            contact.tiktok
-        ];
-
-        if (links.some(link => link && !isSafeHttpUrl(link))) {
-            showToast('تأكد من صحة روابط التواصل.', 'error');
-            return;
-        }
-
-        const previousContact = { ...siteData.contact };
-
-        siteData.contact = contact;
-
-        const saved = await saveSiteData(
-            'تم تحديث بيانات التواصل.'
-        );
-
-        if (!saved) {
-            siteData.contact = previousContact;
-            fillContactForm();
-        }
-    }
-
-
-    /* =========================================
-       13. WEBSITE CONTENT
-       ========================================= */
-
-    function fillContentForm() {
-        const content = siteData.content || {};
-
-        setValue('heroTitleAr', content.heroTitleAr);
-        setValue('heroTitleEn', content.heroTitleEn);
-
-        setValue('heroDescriptionAr', content.heroDescriptionAr);
-        setValue('heroDescriptionEn', content.heroDescriptionEn);
-
-        setValue('aboutTextAr', content.aboutTextAr);
-        setValue('aboutTextEn', content.aboutTextEn);
-    }
-
-
-    async function saveContent(event) {
-        event.preventDefault();
-
-        const content = {
-            heroTitleAr: getValue('heroTitleAr'),
-            heroTitleEn: getValue('heroTitleEn'),
-
-            heroDescriptionAr: getValue('heroDescriptionAr'),
-            heroDescriptionEn: getValue('heroDescriptionEn'),
-
-            aboutTextAr: getValue('aboutTextAr'),
-            aboutTextEn: getValue('aboutTextEn')
-        };
-
-        const previousContent = { ...siteData.content };
-
-        siteData.content = content;
-
-        const saved = await saveSiteData(
-            'تم تحديث محتوى الموقع.'
-        );
-
-        if (!saved) {
-            siteData.content = previousContent;
-            fillContentForm();
-        }
-    }
-
-
-    /* =========================================
-       14. SETTINGS
-       ========================================= */
-
-    function initializeSettings() {
-        const workerInput = $('#workerUrl');
-
-        if (workerInput) {
-            workerInput.value = getWorkerUrl();
-        }
-
-        $('#saveWorkerUrl')?.addEventListener('click', () => {
-            const url = getValue('workerUrl');
-
-            if (!isSafeHttpUrl(url)) {
-                showToast('أدخل رابط Worker صحيحاً يبدأ بـ HTTPS.', 'error');
-                return;
-            }
-
-            try {
-                const parsed = new URL(url);
-
-                if (parsed.protocol !== 'https:') {
-                    showToast('يجب استخدام رابط HTTPS.', 'error');
-                    return;
-                }
-
-                localStorage.setItem(
-                    CONFIG.workerUrlKey,
-                    parsed.origin + parsed.pathname.replace(/\/+$/, '')
-                );
-
-                showToast('تم حفظ رابط الخادم.');
-
-                checkExistingSession();
-
-            } catch {
-                showToast('رابط الخادم غير صالح.', 'error');
-            }
-        });
-    }
-
-
-    /* =========================================
-       15. MODAL HELPERS
-       ========================================= */
-
-    function closeModal(id) {
-        document.getElementById(id)?.classList.remove('active');
-    }
-
-
-    function initializeModals() {
-        document.querySelectorAll('[data-close]').forEach(button => {
-            button.addEventListener('click', () => {
-                closeModal(button.dataset.close);
-            });
-        });
-
-        document.querySelectorAll('.modal-overlay').forEach(modal => {
-            modal.addEventListener('click', event => {
-                if (event.target === modal) {
-                    modal.classList.remove('active');
-                }
-            });
-        });
-
-        document.addEventListener('keydown', event => {
-            if (event.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay.active')
-                    .forEach(modal => modal.classList.remove('active'));
-            }
-        });
-
-        $('#addProductButton')?.addEventListener('click', () => {
-            $('#productForm')?.reset();
-            openProductModal();
-        });
-
-        $('#addBranchButton')?.addEventListener('click', () => {
-            $('#branchForm')?.reset();
-            openBranchModal();
-        });
-    }
-
-
-    /* =========================================
-       16. FORM EVENTS
-       ========================================= */
-
-    function initializeForms() {
-        $('#loginForm')?.addEventListener('submit', event => {
-            event.preventDefault();
-
-            login(getValue('adminPassword'));
-        });
-
-        $('#productForm')?.addEventListener(
-            'submit',
-            saveProduct
-        );
-
-        $('#branchForm')?.addEventListener(
-            'submit',
-            saveBranch
-        );
-
-        $('#contactForm')?.addEventListener(
-            'submit',
-            saveContact
-        );
-
-        $('#contentForm')?.addEventListener(
-            'submit',
-            saveContent
-        );
-
-        $('#logoutButton')?.addEventListener('click', logout);
-
-        $('#settingsLogout')?.addEventListener('click', logout);
-    }
-
-
-    /* =========================================
-       17. VALIDATION HELPERS
-       ========================================= */
-
-    function isSafeHttpUrl(value) {
-        try {
-            const url = new URL(value);
-
-            return (
-                url.protocol === 'https:' ||
-                url.protocol === 'http:'
-            );
-
-        } catch {
-            return false;
-        }
-    }
-
-
-    function isSafeImageUrl(value) {
-        if (!value) return true;
-
-        return isSafeHttpUrl(value);
-    }
-
-
-    function createId() {
-        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
-            return window.crypto.randomUUID();
-        }
-
-        return (
-            'item-' +
-            Date.now().toString(36) +
-            '-' +
-            Math.random().toString(36).slice(2, 10)
-        );
-    }
-
-
-    /* =========================================
-       18. INITIALIZATION
-       ========================================= */
-
-    function initializeDashboard() {
-        initializeNavigation();
-        initializeForms();
-        initializeModals();
-        initializeSettings();
-
-        $('#loginScreen')?.classList.remove('hidden');
-        $('#dashboard')?.classList.add('hidden');
-
-        checkExistingSession();
-    }
-
-
-    /* =========================================
-       19. START APPLICATION
-       ========================================= */
-
-    if (document.readyState === 'loading') {
-        document.addEventListener(
-            'DOMContentLoaded',
-            initializeDashboard
-        );
-
+    const index = state.data.menu.findIndex(
+      (item) => String(item.id) === String(id)
+    );
+
+    if (index >= 0) {
+      state.data.menu[index] = product;
     } else {
-        initializeDashboard();
+      state.data.menu.push(product);
     }
+
+    $("#productModal").hidden = true;
+    await saveContent(index >= 0 ? "تم تعديل الصنف" : "تمت إضافة الصنف");
+  }
+
+  async function deleteProduct(id) {
+    const product = state.data.menu.find(
+      (item) => String(item.id) === String(id)
+    );
+
+    if (!product) return;
+
+    if (!confirm(`هل تريد حذف "${product.nameAr || product.nameEn}"؟`)) {
+      return;
+    }
+
+    state.data.menu = state.data.menu.filter(
+      (item) => String(item.id) !== String(id)
+    );
+
+    await saveContent("تم حذف الصنف");
+  }
+
+  /* ========================================
+     BRANCHES
+     ======================================== */
+
+  function renderBranches() {
+    const container = $("#branchesList");
+    if (!container) return;
+
+    container.replaceChildren();
+
+    if (!state.data.branches.length) {
+      const empty = document.createElement("div");
+      empty.className = "panel-card";
+      empty.textContent = "لا توجد فروع مضافة حتى الآن.";
+      container.appendChild(empty);
+      return;
+    }
+
+    state.data.branches.forEach((branch) => {
+      const card = document.createElement("article");
+      card.className = "branch-admin-card";
+
+      const details = document.createElement("div");
+
+      const name = document.createElement("h3");
+      name.textContent = branch.nameAr || branch.nameEn || "فرع بدون اسم";
+
+      const address = document.createElement("p");
+      address.textContent = branch.addressAr || branch.addressEn || "لا يوجد عنوان";
+
+      details.append(name, address);
+
+      const actions = document.createElement("div");
+      actions.className = "table-actions";
+
+      const edit = document.createElement("button");
+      edit.className = "table-action edit-action";
+      edit.textContent = "تعديل";
+      edit.type = "button";
+      edit.addEventListener("click", () => openBranchModal(branch.id));
+
+      const remove = document.createElement("button");
+      remove.className = "table-action delete-action";
+      remove.textContent = "حذف";
+      remove.type = "button";
+      remove.addEventListener("click", () => deleteBranch(branch.id));
+
+      actions.append(edit, remove);
+      card.append(details, actions);
+      container.appendChild(card);
+    });
+  }
+
+  function openBranchModal(id = null) {
+    const branch = id
+      ? state.data.branches.find((item) => String(item.id) === String(id))
+      : null;
+
+    state.editingBranchId = branch?.id || null;
+
+    $("#branchModalTitle").textContent =
+      branch ? "تعديل بيانات الفرع" : "إضافة فرع جديد";
+
+    $("#branchId").value = branch?.id || "";
+    $("#branchNameAr").value = branch?.nameAr || "";
+    $("#branchNameEn").value = branch?.nameEn || "";
+    $("#branchAddressAr").value = branch?.addressAr || "";
+    $("#branchAddressEn").value = branch?.addressEn || "";
+    $("#branchPhone").value = branch?.phone || "";
+    $("#branchMap").value = branch?.map || "";
+    $("#branchActive").checked = branch?.active !== false;
+
+    $("#branchModal").hidden = false;
+    $("#branchNameAr").focus();
+  }
+
+  async function saveBranch(event) {
+    event.preventDefault();
+
+    const id = state.editingBranchId || makeId("branch");
+
+    const branch = {
+      id,
+      nameAr: $("#branchNameAr").value.trim(),
+      nameEn: $("#branchNameEn").value.trim(),
+      addressAr: $("#branchAddressAr").value.trim(),
+      addressEn: $("#branchAddressEn").value.trim(),
+      phone: $("#branchPhone").value.trim(),
+      map: $("#branchMap").value.trim(),
+      active: $("#branchActive").checked
+    };
+
+    if (!branch.nameAr) {
+      toast("اكتب اسم الفرع بالعربية.");
+      return;
+    }
+
+    const index = state.data.branches.findIndex(
+      (item) => String(item.id) === String(id)
+    );
+
+    if (index >= 0) {
+      state.data.branches[index] = branch;
+    } else {
+      state.data.branches.push(branch);
+    }
+
+    $("#branchModal").hidden = true;
+    await saveContent(index >= 0 ? "تم تعديل الفرع" : "تمت إضافة الفرع");
+  }
+
+  async function deleteBranch(id) {
+    const branch = state.data.branches.find(
+      (item) => String(item.id) === String(id)
+    );
+
+    if (!branch) return;
+
+    if (!confirm(`هل تريد حذف "${branch.nameAr || branch.nameEn}"؟`)) {
+      return;
+    }
+
+    state.data.branches = state.data.branches.filter(
+      (item) => String(item.id) !== String(id)
+    );
+
+    await saveContent("تم حذف الفرع");
+  }
+
+  /* ========================================
+     CONTACT FORM
+     ======================================== */
+
+  function fillContactForm() {
+    const contact = state.data.contact;
+
+    $("#phone").value = contact.phone || "";
+    $("#whatsapp").value = contact.whatsapp || "";
+    $("#facebook").value = contact.facebook || "";
+    $("#instagram").value = contact.instagram || "";
+    $("#tiktok").value = contact.tiktok || "";
+  }
+
+  async function saveContact(event) {
+    event.preventDefault();
+
+    state.data.contact = {
+      ...state.data.contact,
+      phone: $("#phone").value.trim(),
+      whatsapp: $("#whatsapp").value.trim(),
+      facebook: $("#facebook").value.trim(),
+      instagram: $("#instagram").value.trim(),
+      tiktok: $("#tiktok").value.trim()
+    };
+
+    await saveContent("تم تحديث بيانات التواصل");
+  }
+
+  /* ========================================
+     WEBSITE CONTENT FORM
+     ======================================== */
+
+  function fillContentForm() {
+    const content = state.data.content;
+
+    [
+      "heroTitleAr",
+      "heroTitleEn",
+      "heroDescriptionAr",
+      "heroDescriptionEn",
+      "aboutTextAr",
+      "aboutTextEn"
+    ].forEach((key) => {
+      const field = $(`#${key}`);
+      if (field) field.value = content[key] || "";
+    });
+  }
+
+  async function saveWebsiteContent(event) {
+    event.preventDefault();
+
+    const keys = [
+      "heroTitleAr",
+      "heroTitleEn",
+      "heroDescriptionAr",
+      "heroDescriptionEn",
+      "aboutTextAr",
+      "aboutTextEn"
+    ];
+
+    keys.forEach((key) => {
+      state.data.content[key] = $(`#${key}`).value.trim();
+    });
+
+    await saveContent("تم حفظ محتوى الموقع");
+  }
+
+  /* ========================================
+     MODALS
+     ======================================== */
+
+  function closeModal(id) {
+    const modal = $(`#${id}`);
+    if (modal) modal.hidden = true;
+  }
+
+  function initModals() {
+    $$("[data-close-modal]").forEach((button) => {
+      button.addEventListener("click", () => {
+        closeModal(button.dataset.closeModal);
+      });
+    });
+
+    $$(".modal-backdrop").forEach((modal) => {
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          modal.hidden = true;
+        }
+      });
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        $$(".modal-backdrop").forEach((modal) => {
+          modal.hidden = true;
+        });
+      }
+    });
+  }
+
+  /* ========================================
+     SETTINGS
+     ======================================== */
+
+  function initSettings() {
+    const workerInput = $("#workerUrl");
+
+    workerInput.value = getWorkerUrl();
+
+    $("#saveWorkerUrl").addEventListener("click", async () => {
+      const value = workerInput.value.trim().replace(/\/+$/, "");
+
+      if (!value) {
+        toast("أدخل رابط Worker صحيح.");
+        return;
+      }
+
+      try {
+        const url = new URL(value);
+
+        if (!["https:", "http:"].includes(url.protocol)) {
+          throw new Error("Invalid URL");
+        }
+
+        localStorage.setItem(CONFIG.workerUrlKey, value);
+        toast("تم حفظ رابط Worker");
+
+        if (getToken()) {
+          await fetchContent();
+        }
+      } catch (error) {
+        toast("رابط Worker غير صحيح.");
+      }
+    });
+  }
+
+  /* ========================================
+     AUTHENTICATION
+     ======================================== */
+
+  function initAuthentication() {
+    $("#loginForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      if (state.busy) return;
+
+      const password = $("#adminPassword").value;
+      const button = $("#loginButton");
+      const message = $("#loginMessage");
+
+      if (!getWorkerUrl()) {
+        message.textContent = "أدخل رابط Worker أولًا من إعدادات الاتصال.";
+        return;
+      }
+
+      state.busy = true;
+      button.disabled = true;
+      button.textContent = "جارٍ تسجيل الدخول...";
+
+      try {
+        await login(password);
+        await fetchContent();
+
+        showDashboard();
+        $("#adminPassword").value = "";
+        message.textContent = "";
+        toast("أهلًا بك في لوحة إدارة البرديسي");
+
+      } catch (error) {
+        clearSession();
+        message.textContent = error.message || "تعذر تسجيل الدخول.";
+      } finally {
+        state.busy = false;
+        button.disabled = false;
+        button.innerHTML = 'تسجيل الدخول <span>←</span>';
+      }
+    });
+
+    $("#logoutButton").addEventListener("click", logout);
+    $("#settingsLogout").addEventListener("click", logout);
+  }
+
+  /* ========================================
+     REFRESH
+     ======================================== */
+
+  function initRefresh() {
+    $("#refreshButton").addEventListener("click", async () => {
+      try {
+        await fetchContent();
+        toast("تم تحديث البيانات");
+      } catch (error) {
+        toast(error.message || "فشل تحديث البيانات");
+      }
+    });
+  }
+
+  /* ========================================
+     INITIALIZATION
+     ======================================== */
+
+  function init() {
+    initNavigation();
+    initModals();
+    initSettings();
+    initAuthentication();
+    initRefresh();
+
+    $("#addProductButton").addEventListener("click", () => {
+      openProductModal();
+    });
+
+    $("#addBranchButton").addEventListener("click", () => {
+      openBranchModal();
+    });
+
+    $("#productForm").addEventListener("submit", saveProduct);
+    $("#branchForm").addEventListener("submit", saveBranch);
+    $("#contactForm").addEventListener("submit", saveContact);
+    $("#contentForm").addEventListener("submit", saveWebsiteContent);
+
+    const existingToken = getToken();
+
+    if (existingToken && !sessionIsExpired()) {
+      showDashboard();
+
+      fetchContent().catch((error) => {
+        console.error(error);
+        clearSession();
+        showLogin("تعذر استعادة الجلسة. سجّل الدخول مرة أخرى.");
+        setConnection("error", "فشل الاتصال");
+      });
+    } else {
+      clearSession();
+      showLogin();
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", init, { once: true });
 
 })();
