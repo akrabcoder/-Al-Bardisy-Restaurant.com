@@ -5,335 +5,251 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#17130f">
-
+  <meta name="description" content="مطعم البرديسي - اكتشف قائمة الطعام والفروع وتواصل معنا.">
   <title>مطعم البرديسي | Al Bardisi Restaurant</title>
-  <meta name="description" content="مطعم البرديسي - تجربة طعام مميزة تجمع بين الأصالة والجودة. اكتشف المنيو والفروع.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Playfair+Display:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/responsive.css">
-
-  <script>
-    try {
-      document.documentElement.lang =
-        localStorage.getItem("bardisi_lang") || "ar";
-      document.documentElement.dir =
-        document.documentElement.lang === "ar" ? "rtl" : "ltr";
-    } catch (error) {}
-  </script>
 </head>
 
 <body>
-
-  <!-- PRELOADER -->
   <div class="preloader" id="preloader">
     <div class="preloader-content">
-      <span class="preloader-logo">الـبـرديـسـي</span>
-      <span class="preloader-line"></span>
-      <span class="preloader-caption">AL BARDISI RESTAURANT</span>
+      <div class="preloader-mark">B</div>
+      <span>AL BARDISI</span>
+      <div class="preloader-line"></div>
     </div>
   </div>
 
-  <!-- HEADER -->
-  <header class="site-header" id="header">
-    <div class="container header-container">
+  <div class="cursor-glow" aria-hidden="true"></div>
 
+  <header class="header" id="header">
+    <div class="container header-inner">
       <a href="#home" class="brand" aria-label="Al Bardisi Home">
-        <span class="brand-mark">ب</span>
+        <span class="brand-symbol">B</span>
         <span class="brand-text">
-          <strong data-i18n="brandName">البرديسي</strong>
-          <small>AL BARDISI</small>
+          <strong data-i18n="brandName">مطعم البرديسي</strong>
+          <small>RESTAURANT</small>
         </span>
       </a>
-
-      <button class="menu-toggle" id="menuToggle" aria-label="Open menu" aria-expanded="false">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
 
       <nav class="main-nav" id="mainNav">
         <a href="#home" class="nav-link active" data-i18n="navHome">الرئيسية</a>
         <a href="#about" class="nav-link" data-i18n="navAbout">عن المطعم</a>
-        <a href="#menu" class="nav-link" data-i18n="navMenu">المنيو</a>
+        <a href="#menu" class="nav-link" data-i18n="navMenu">قائمة الطعام</a>
         <a href="#branches" class="nav-link" data-i18n="navBranches">فروعنا</a>
         <a href="#contact" class="nav-link" data-i18n="navContact">تواصل معنا</a>
       </nav>
 
       <div class="header-actions">
-        <button class="language-switch" id="languageSwitch" aria-label="Change language">
+        <button class="language-switch" id="languageSwitch" type="button" aria-label="Change language">
           <span id="languageLabel">EN</span>
         </button>
-        <a href="#menu" class="header-cta" data-i18n="orderNow">اكتشف المنيو</a>
+        <a href="#menu" class="header-order-button" data-i18n="orderNow">اطلب الآن</a>
+        <button class="menu-toggle" id="menuToggle" type="button" aria-label="فتح القائمة" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
       </div>
-
     </div>
   </header>
 
   <main>
-
-    <!-- HERO -->
     <section class="hero" id="home">
+      <div class="hero-background"></div>
       <div class="hero-overlay"></div>
 
-      <div class="container hero-container">
-        <div class="hero-content reveal">
+      <div class="container hero-content">
+        <div class="hero-copy reveal">
+          <span class="hero-eyebrow">
+            <span class="gold-line"></span>
+            <span data-i18n="heroEyebrow">تجربة بطعم مختلف</span>
+          </span>
 
-          <div class="hero-eyebrow">
-            <span class="eyebrow-line"></span>
-            <span data-i18n="heroEyebrow">أصالة الطعم.. حكاية لا تُنسى</span>
-          </div>
-
-          <h1>
-            <span data-i18n="heroTitleFirst">الطعم الأصيل</span>
-            <span class="gold-text" data-i18n="heroTitleSecond">له عنوان</span>
+          <h1 class="hero-title">
+            <span data-i18n="heroTitleFirst">مطعم</span>
+            <span class="hero-title-accent" data-i18n="heroTitleSecond">البرديسي</span>
           </h1>
 
           <p class="hero-description" data-i18n="heroDescription">
-            في البرديسي، كل وجبة حكاية من الجودة والاهتمام بالتفاصيل. نرحب بك لتعيش تجربة طعام تستحقها.
+            أهلاً بكم في مطعم البرديسي، حيث تلتقي النكهة المميزة مع كرم الضيافة.
           </p>
 
           <div class="hero-buttons">
-            <a href="#menu" class="btn btn-primary" data-i18n="exploreMenu">
-              اكتشف المنيو
-              <span>←</span>
+            <a href="#menu" class="button button-gold">
+              <span data-i18n="exploreMenu">اكتشف قائمة الطعام</span>
+              <span class="button-arrow">↗</span>
             </a>
-            <a href="#about" class="btn btn-outline" data-i18n="discoverUs">
-              اكتشف قصتنا
-            </a>
+            <a href="#about" class="button button-outline" data-i18n="discoverUs">اكتشف قصتنا</a>
           </div>
-
-          <div class="hero-bottom-note">
-            <span class="hero-note-line"></span>
-            <span data-i18n="heroBottom">جودة نهتم بها.. وطعم تتذكره</span>
-          </div>
-
         </div>
 
-        <div class="hero-side-label">
-          <span>EST. AL BARDISI</span>
-          <span class="side-label-line"></span>
-          <span>01 — 25</span>
+        <div class="hero-bottom">
+          <span data-i18n="heroBottom">جودة نعتز بها • مذاق لا يُنسى</span>
+          <span class="hero-scroll">SCROLL TO EXPLORE ↓</span>
         </div>
       </div>
-
-      <a href="#about" class="scroll-indicator" aria-label="Scroll down">
-        <span></span>
-      </a>
     </section>
 
-    <!-- ABOUT -->
-    <section class="about-section section-padding" id="about">
-      <div class="container">
+    <section class="about section-padding" id="about">
+      <div class="container about-grid">
+        <div class="about-visual reveal">
+          <div class="about-image-main"></div>
+          <div class="about-image-decoration"></div>
+          <div class="about-stamp">
+            <span>AL</span>
+            <strong>BARDISI</strong>
+            <small>RESTAURANT</small>
+          </div>
+        </div>
 
-        <div class="section-heading reveal">
-          <span class="section-kicker" data-i18n="aboutKicker">حكايتنا</span>
-          <h2 data-i18n="aboutTitle">أكثر من مجرد <span class="gold-text">مطعم</span></h2>
-          <p data-i18n="aboutSubtitle">
-            شغف بالتفاصيل، واهتمام بكل طبق يصل إلى مائدتك.
+        <div class="about-content reveal">
+          <span class="section-kicker" data-i18n="aboutKicker">حكاية مذاق</span>
+          <h2 class="section-title" data-i18n="aboutTitle">أهلاً بكم في عالم البرديسي</h2>
+          <p class="section-subtitle" data-i18n="aboutSubtitle">الطعم المميز يبدأ من التفاصيل.</p>
+
+          <div class="about-divider"></div>
+
+          <h3 data-i18n="aboutHeading">أكثر من مجرد مطعم</h3>
+          <p class="about-text" data-i18n="aboutText">
+            نرحب بكم في مطعم البرديسي. نسعى دائمًا لتقديم تجربة طعام مميزة وخدمة تليق بضيوفنا.
           </p>
-        </div>
 
-        <div class="about-grid">
-
-          <div class="about-visual reveal">
-            <div class="about-image-main">
-              <img
-                src="https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1000&q=85"
-                alt="Restaurant dining experience"
-                loading="lazy"
-              >
-            </div>
-            <div class="about-image-decoration"></div>
-            <div class="about-stamp">
-              <span>AL</span>
-              <strong>B</strong>
-              <span>BARDISI</span>
-            </div>
-          </div>
-
-          <div class="about-content reveal">
-            <span class="content-number">01 / ABOUT US</span>
-
-            <h3 data-i18n="aboutHeading">
-              نؤمن أن الوجبة المميزة تبدأ من الاهتمام بأدق التفاصيل.
-            </h3>
-
-            <p data-i18n="aboutText">
-              البرديسي هو المكان الذي يجتمع فيه الطعم المميز مع الاهتمام بالجودة والخدمة. نعمل دائمًا على تقديم تجربة ترضي ضيوفنا وتجعل لكل زيارة ذكرى جميلة.
-            </p>
-
-            <a href="#menu" class="text-link">
-              <span data-i18n="aboutLink">اكتشف ما نقدمه</span>
-              <span>←</span>
-            </a>
-          </div>
-
+          <a href="#branches" class="text-link">
+            <span data-i18n="aboutLink">تعرف على فروعنا</span>
+            <span>↗</span>
+          </a>
         </div>
       </div>
     </section>
 
-    <!-- MENU -->
     <section class="menu-section section-padding" id="menu">
       <div class="container">
-
-        <div class="section-heading reveal">
+        <div class="section-heading centered reveal">
           <span class="section-kicker" data-i18n="menuKicker">اختياراتنا</span>
-          <h2 data-i18n="menuTitle">منيو <span class="gold-text">البرديسي</span></h2>
-          <p data-i18n="menuSubtitle">
-            اكتشف مجموعة من اختياراتنا واستمتع بتجربتك.
-          </p>
+          <h2 class="section-title" data-i18n="menuTitle">قائمة الطعام</h2>
+          <p class="section-subtitle" data-i18n="menuSubtitle">اكتشف مجموعة من اختياراتنا.</p>
         </div>
 
-        <div class="menu-filters" id="menuFilters">
-          <button class="filter-btn active" data-category="all" data-i18n="allItems">الكل</button>
+        <div class="menu-filters reveal" id="menuFilters">
+          <button class="menu-filter active" type="button" data-category="all" data-i18n="allItems">الكل</button>
         </div>
 
-        <div class="menu-grid" id="menuGrid">
-          <div class="menu-loading">
-            <span class="loading-spinner"></span>
-            <p data-i18n="loadingMenu">جاري تحميل المنيو...</p>
-          </div>
+        <div class="menu-grid" id="menuGrid" aria-live="polite">
+          <div class="loading-message" data-i18n="loadingMenu">جارٍ تحميل قائمة الطعام...</div>
         </div>
 
-        <div class="menu-footer">
-          <p data-i18n="menuFooter">الأسعار والتوافر قد يتغيران حسب الفرع.</p>
+        <div class="menu-bottom reveal">
+          <p data-i18n="menuFooter">للطلب والاستفسار، تواصل معنا مباشرة.</p>
+          <a href="#contact" class="text-link">
+            <span data-i18n="contactTitle">تواصل معنا</span>
+            <span>↗</span>
+          </a>
         </div>
-
       </div>
     </section>
 
-    <!-- EXPERIENCE -->
     <section class="experience-section">
       <div class="experience-background"></div>
-      <div class="container experience-container reveal">
+      <div class="experience-overlay"></div>
+      <div class="container experience-content reveal">
         <span class="section-kicker" data-i18n="experienceKicker">تجربة البرديسي</span>
-        <h2 data-i18n="experienceTitle">كل زيارة.. <span class="gold-text">لها مذاق خاص</span></h2>
-        <p data-i18n="experienceText">
-          ننتظرك لتستمتع بتجربة تجمع بين جودة الطعام ودفء الضيافة.
-        </p>
-        <a href="#branches" class="btn btn-primary" data-i18n="findBranch">
-          اعثر على أقرب فرع
+        <h2 data-i18n="experienceTitle">لحظات تستحق أن تعيشها</h2>
+        <p data-i18n="experienceText">ننتظركم لتستمتعوا بتجربة تجمع بين المذاق والضيافة.</p>
+        <a href="#branches" class="button button-gold">
+          <span data-i18n="findBranch">اعثر على أقرب فرع</span>
+          <span class="button-arrow">↗</span>
         </a>
       </div>
     </section>
 
-    <!-- BRANCHES -->
     <section class="branches-section section-padding" id="branches">
       <div class="container">
-
-        <div class="section-heading reveal">
+        <div class="section-heading centered reveal">
           <span class="section-kicker" data-i18n="branchesKicker">نحن بالقرب منك</span>
-          <h2 data-i18n="branchesTitle">فروع <span class="gold-text">البرديسي</span></h2>
-          <p data-i18n="branchesSubtitle">اختر الفرع الأقرب إليك واستمتع بزيارتنا.</p>
+          <h2 class="section-title" data-i18n="branchesTitle">فروعنا</h2>
+          <p class="section-subtitle" data-i18n="branchesSubtitle">اختر الفرع الأقرب إليك.</p>
         </div>
 
-        <div class="branches-grid" id="branchesGrid">
-          <div class="menu-loading">
-            <span class="loading-spinner"></span>
-            <p data-i18n="loadingBranches">جاري تحميل الفروع...</p>
-          </div>
+        <div class="branches-grid" id="branchesGrid" aria-live="polite">
+          <div class="loading-message" data-i18n="loadingBranches">جارٍ تحميل الفروع...</div>
         </div>
-
       </div>
     </section>
 
-    <!-- CONTACT -->
     <section class="contact-section section-padding" id="contact">
-      <div class="container">
+      <div class="container contact-grid">
+        <div class="contact-content reveal">
+          <span class="section-kicker" data-i18n="contactKicker">يسعدنا تواصلك</span>
+          <h2 class="section-title" data-i18n="contactTitle">تواصل معنا</h2>
+          <p class="section-subtitle" data-i18n="contactText">نحن هنا للإجابة عن استفساراتكم واستقبال طلباتكم.</p>
 
-        <div class="contact-panel reveal">
-
-          <div class="contact-content">
-            <span class="section-kicker" data-i18n="contactKicker">يسعدنا تواصلك</span>
-            <h2 data-i18n="contactTitle">خلينا نكون <span class="gold-text">على تواصل</span></h2>
-            <p data-i18n="contactText">
-              للاستفسارات والتواصل، يسعدنا استقبال رسائلك ومكالماتك.
-            </p>
-
-            <div class="contact-details">
-              <a href="tel:01002862600" id="contactPhone">
-                <span class="contact-icon">☎</span>
-                <span>
-                  <small data-i18n="phoneLabel">اتصل بنا</small>
-                  <strong>01002862600</strong>
-                </span>
-              </a>
-
-              <a href="https://wa.me/201002862600" id="contactWhatsApp" target="_blank" rel="noopener">
-                <span class="contact-icon">✆</span>
-                <span>
-                  <small data-i18n="whatsappLabel">واتساب</small>
-                  <strong data-i18n="sendMessage">أرسل لنا رسالة</strong>
-                </span>
-              </a>
+          <div class="contact-methods">
+            <div class="contact-method">
+              <span class="contact-method-icon">☎</span>
+              <div>
+                <small data-i18n="phoneLabel">اتصل بنا</small>
+                <a id="contactPhone" href="tel:01002862600">01002862600</a>
+              </div>
             </div>
 
+            <div class="contact-method">
+              <span class="contact-method-icon">◉</span>
+              <div>
+                <small data-i18n="whatsappLabel">واتساب</small>
+                <a id="contactWhatsApp" href="https://wa.me/201002862600" target="_blank" rel="noopener noreferrer">تواصل عبر واتساب</a>
+              </div>
+            </div>
+          </div>
+
+          <a href="https://wa.me/201002862600" class="button button-gold contact-main-button" id="contactMainWhatsApp" target="_blank" rel="noopener noreferrer">
+            <span data-i18n="sendMessage">أرسل لنا رسالة</span>
+            <span class="button-arrow">↗</span>
+          </a>
+        </div>
+
+        <div class="contact-visual reveal">
+          <div class="contact-visual-inner">
+            <span class="contact-monogram">B</span>
+            <span class="contact-visual-name">AL BARDISI</span>
+            <span class="contact-visual-caption">RESTAURANT</span>
+            <div class="contact-visual-line"></div>
+            <p data-i18n="footerDescription">مطعم البرديسي، نرحب بكم دائمًا.</p>
             <div class="social-links" id="socialLinks">
-              <a href="#" data-social="facebook" aria-label="Facebook">f</a>
-              <a href="#" data-social="instagram" aria-label="Instagram">◎</a>
-              <a href="#" data-social="tiktok" aria-label="TikTok">♪</a>
+              <a data-social="facebook" href="#" target="_blank" rel="noopener noreferrer" aria-label="Facebook">f</a>
+              <a data-social="instagram" href="#" target="_blank" rel="noopener noreferrer" aria-label="Instagram">◎</a>
+              <a data-social="tiktok" href="#" target="_blank" rel="noopener noreferrer" aria-label="TikTok">♪</a>
             </div>
           </div>
-
-          <div class="contact-decoration">
-            <div class="contact-circle contact-circle-one"></div>
-            <div class="contact-circle contact-circle-two"></div>
-            <span class="contact-decoration-letter">ب</span>
-            <span class="contact-decoration-caption">AL BARDISI</span>
-          </div>
-
         </div>
       </div>
     </section>
-
   </main>
 
-  <!-- FOOTER -->
-  <footer class="site-footer">
-    <div class="container">
-
-      <div class="footer-main">
-
-        <a href="#home" class="brand footer-brand">
-          <span class="brand-mark">ب</span>
-          <span class="brand-text">
-            <strong data-i18n="brandName">البرديسي</strong>
-            <small>AL BARDISI</small>
-          </span>
-        </a>
-
-        <p data-i18n="footerDescription">
-          الطعم الأصيل.. والضيافة التي تستحقها.
-        </p>
-
-        <div class="footer-nav">
-          <a href="#home" data-i18n="navHome">الرئيسية</a>
-          <a href="#about" data-i18n="navAbout">عن المطعم</a>
-          <a href="#menu" data-i18n="navMenu">المنيو</a>
-          <a href="#branches" data-i18n="navBranches">فروعنا</a>
-          <a href="#contact" data-i18n="navContact">تواصل معنا</a>
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="footer-brand-mark">B</span>
+        <div>
+          <strong data-i18n="brandName">مطعم البرديسي</strong>
+          <p data-i18n="footerDescription">مطعم البرديسي، نرحب بكم دائمًا.</p>
         </div>
-
       </div>
 
       <div class="footer-bottom">
-        <span>© <span id="currentYear"></span> Al Bardisi Restaurant</span>
-        <span data-i18n="rightsReserved">جميع الحقوق محفوظة</span>
+        <p>© <span id="currentYear"></span> <span data-i18n="rightsReserved">جميع الحقوق محفوظة لمطعم البرديسي.</span></p>
+        <a href="admin.html" class="admin-entry" aria-label="إدارة المتجر">إدارة المتجر</a>
       </div>
-
     </div>
   </footer>
 
-  <!-- BACK TO TOP -->
-  <button class="back-to-top" id="backToTop" aria-label="Back to top">↑</button>
+  <button class="back-to-top" id="backToTop" type="button" aria-label="العودة للأعلى">↑</button>
 
-  <!-- SCRIPTS -->
   <script src="js/translations.js"></script>
   <script src="js/main.js"></script>
-
+  <script src="js/effects.js"></script>
 </body>
 </html>
