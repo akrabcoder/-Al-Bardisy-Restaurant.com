@@ -1,0 +1,860 @@
+
+/* ==========================================
+   AL BARDISI RESTAURANT
+   RESPONSIVE STYLESHEET
+   Mobile First Adaptation
+========================================== */
+
+/* ========== LARGE DESKTOP ========== */
+
+@media (max-width: 1400px) {
+  :root {
+    --container: 1140px;
+  }
+}
+
+@media (max-width: 1200px) {
+  :root {
+    --container: 960px;
+  }
+
+  .main-nav {
+    gap: 18px;
+  }
+
+  .header-container {
+    gap: 18px;
+  }
+
+  .about-grid {
+    gap: 55px;
+  }
+
+  .contact-content {
+    padding: 50px;
+  }
+
+  .menu-grid {
+    gap: 20px;
+  }
+}
+
+/* ========== TABLETS ========== */
+
+@media (max-width: 992px) {
+  :root {
+    --header-height: 76px;
+    --container: 720px;
+  }
+
+  .section-padding {
+    padding: 85px 0;
+  }
+
+  /* Header */
+
+  .main-nav {
+    position: fixed;
+    top: var(--header-height);
+    inset-inline: 0;
+    width: 100%;
+    height: calc(100vh - var(--header-height));
+    background: rgba(23, 19, 15, 0.98);
+    backdrop-filter: blur(18px);
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0;
+    padding: 35px 20px;
+    transform: translateY(-15px);
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition);
+    overflow-y: auto;
+    border-top: 1px solid var(--border);
+  }
+
+  .main-nav.open {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .nav-link {
+    width: 100%;
+    max-width: 450px;
+    padding: 15px 10px;
+    text-align: center;
+    font-size: 15px;
+    border-bottom: 1px solid rgba(201, 162, 39, 0.1);
+  }
+
+  .nav-link::after {
+    display: none;
+  }
+
+  .menu-toggle {
+    display: flex;
+    order: 3;
+  }
+
+  .header-actions {
+    margin-inline-start: auto;
+  }
+
+  .header-cta {
+    padding: 9px 14px;
+  }
+
+  .menu-toggle.active span:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+  }
+
+  .menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .menu-toggle.active span:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+  }
+
+  /* Hero */
+
+  .hero {
+    min-height: 680px;
+    height: 90vh;
+  }
+
+  .hero-content {
+    max-width: 600px;
+  }
+
+  .hero h1 {
+    font-size: clamp(45px, 7vw, 70px);
+  }
+
+  .hero-side-label {
+    display: none;
+  }
+
+  /* About */
+
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 45px;
+  }
+
+  .about-visual {
+    width: 100%;
+    max-width: 620px;
+    margin: auto;
+  }
+
+  .about-content {
+    max-width: 650px;
+    margin: auto;
+  }
+
+  /* Menu */
+
+  .menu-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Contact */
+
+  .contact-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-decoration {
+    min-height: 300px;
+  }
+
+  .contact-decoration-letter {
+    font-size: 120px;
+  }
+}
+
+/* ========== SMALL TABLETS / LARGE PHONES ========== */
+
+@media (max-width: 768px) {
+  :root {
+    --container: 100%;
+    --header-height: 70px;
+  }
+
+  .container {
+    width: calc(100% - 36px);
+  }
+
+  .section-padding {
+    padding: 75px 0;
+  }
+
+  .section-heading {
+    margin-bottom: 45px;
+  }
+
+  .section-heading h2 {
+    font-size: 33px;
+  }
+
+  .section-heading p {
+    font-size: 13px;
+  }
+
+  /* Header */
+
+  .site-header {
+    height: var(--header-height);
+  }
+
+  .site-header.scrolled {
+    height: 66px;
+  }
+
+  .brand-mark {
+    width: 39px;
+    height: 39px;
+    font-size: 23px;
+  }
+
+  .brand-text strong {
+    font-size: 16px;
+  }
+
+  .brand-text small {
+    font-size: 8px;
+  }
+
+  .header-container {
+    gap: 12px;
+  }
+
+  .header-actions {
+    gap: 10px;
+  }
+
+  .header-cta {
+    display: none;
+  }
+
+  .language-switch {
+    width: 35px;
+    height: 35px;
+  }
+
+  /* Hero */
+
+  .hero {
+    min-height: 650px;
+    height: 90svh;
+    max-height: 850px;
+    background-position: center;
+  }
+
+  .hero-content {
+    padding-top: 65px;
+  }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    margin-bottom: 18px;
+  }
+
+  .hero h1 {
+    font-size: clamp(42px, 10vw, 65px);
+    margin-bottom: 18px;
+  }
+
+  .hero-description {
+    font-size: 13px;
+    line-height: 2;
+    max-width: 450px;
+    margin-bottom: 27px;
+  }
+
+  .hero-buttons {
+    gap: 11px;
+  }
+
+  .btn {
+    min-height: 48px;
+    padding: 11px 17px;
+    font-size: 11px;
+  }
+
+  .hero-bottom-note {
+    margin-top: 55px;
+    font-size: 10px;
+  }
+
+  .scroll-indicator {
+    bottom: 25px;
+  }
+
+  /* About */
+
+  .about-visual {
+    min-height: 390px;
+  }
+
+  .about-image-main {
+    height: 360px;
+  }
+
+  .about-stamp {
+    width: 95px;
+    height: 95px;
+  }
+
+  .about-stamp strong {
+    font-size: 38px;
+  }
+
+  .about-content h3 {
+    font-size: 28px;
+  }
+
+  .about-content p {
+    font-size: 13px;
+  }
+
+  /* Menu */
+
+  .menu-section {
+    background-attachment: scroll;
+  }
+
+  .menu-grid {
+    gap: 15px;
+  }
+
+  .menu-card-image {
+    height: 185px;
+  }
+
+  .menu-card-content {
+    padding: 16px;
+  }
+
+  .menu-card-title {
+    font-size: 16px;
+  }
+
+  .menu-card-description {
+    font-size: 11px;
+  }
+
+  .menu-card-price {
+    font-size: 17px;
+  }
+
+  .menu-card-order {
+    padding: 7px 10px;
+    font-size: 10px;
+  }
+
+  .filter-btn {
+    padding: 8px 17px;
+    font-size: 11px;
+  }
+
+  /* Experience */
+
+  .experience-section {
+    min-height: 390px;
+    background-attachment: scroll;
+  }
+
+  .experience-container {
+    padding: 65px 18px;
+  }
+
+  .experience-container h2 {
+    font-size: 32px;
+  }
+
+  .experience-container p {
+    font-size: 12px;
+  }
+
+  /* Branches */
+
+  .branches-grid {
+    gap: 15px;
+  }
+
+  .branch-card {
+    padding: 23px;
+  }
+
+  .branch-card h3 {
+    font-size: 19px;
+  }
+
+  .branch-address {
+    font-size: 12px;
+  }
+
+  /* Contact */
+
+  .contact-content {
+    padding: 40px 30px;
+  }
+
+  .contact-content h2 {
+    font-size: 31px;
+  }
+
+  .contact-content > p {
+    font-size: 12px;
+  }
+
+  .contact-details {
+    gap: 20px;
+  }
+
+  .contact-decoration {
+    min-height: 260px;
+  }
+
+  .contact-circle-one {
+    width: 240px;
+    height: 240px;
+  }
+
+  .contact-circle-two {
+    width: 190px;
+    height: 190px;
+  }
+
+  /* Footer */
+
+  .footer-nav {
+    gap: 17px;
+  }
+}
+
+/* ========== MOBILE ========== */
+
+@media (max-width: 576px) {
+  .container {
+    width: calc(100% - 30px);
+  }
+
+  .section-padding {
+    padding: 65px 0;
+  }
+
+  .section-heading {
+    margin-bottom: 35px;
+  }
+
+  .section-heading h2 {
+    font-size: 29px;
+  }
+
+  .section-kicker {
+    font-size: 10px;
+    margin-bottom: 10px;
+  }
+
+  /* Header */
+
+  .brand {
+    gap: 8px;
+  }
+
+  .brand-mark {
+    width: 35px;
+    height: 35px;
+    font-size: 20px;
+  }
+
+  .brand-mark::after {
+    inset: 3px;
+  }
+
+  .brand-text strong {
+    font-size: 14px;
+  }
+
+  .brand-text small {
+    font-size: 7px;
+    letter-spacing: 1px;
+  }
+
+  .header-container {
+    gap: 8px;
+  }
+
+  .menu-toggle {
+    width: 30px;
+  }
+
+  .menu-toggle span {
+    width: 23px;
+  }
+
+  /* Hero */
+
+  .hero {
+    min-height: 610px;
+    height: 88svh;
+    max-height: 750px;
+    background-position: 55% center;
+  }
+
+  .hero-content {
+    padding-top: 45px;
+  }
+
+  .hero-eyebrow {
+    font-size: 10px;
+    gap: 9px;
+  }
+
+  .eyebrow-line {
+    width: 25px;
+  }
+
+  .hero h1 {
+    font-size: clamp(38px, 10.5vw, 54px);
+    line-height: 1.4;
+  }
+
+  .hero-description {
+    font-size: 12px;
+    max-width: 100%;
+    line-height: 2.1;
+  }
+
+  .hero-buttons {
+    align-items: stretch;
+    flex-direction: column;
+    max-width: 230px;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hero-bottom-note {
+    margin-top: 40px;
+    font-size: 9px;
+  }
+
+  .scroll-indicator {
+    width: 22px;
+    height: 35px;
+  }
+
+  /* About */
+
+  .about-grid {
+    gap: 30px;
+  }
+
+  .about-visual {
+    min-height: 310px;
+  }
+
+  .about-image-main {
+    height: 285px;
+    width: 88%;
+  }
+
+  .about-image-decoration {
+    height: 85%;
+    top: 20px;
+  }
+
+  .about-stamp {
+    width: 75px;
+    height: 75px;
+    bottom: 0;
+  }
+
+  .about-stamp strong {
+    font-size: 30px;
+  }
+
+  .about-stamp span {
+    font-size: 7px;
+  }
+
+  .content-number {
+    font-size: 9px;
+    margin-bottom: 14px;
+  }
+
+  .about-content h3 {
+    font-size: 23px;
+    line-height: 1.7;
+    margin-bottom: 15px;
+  }
+
+  .about-content p {
+    font-size: 12px;
+    line-height: 2.1;
+  }
+
+  /* Menu */
+
+  .menu-filters {
+    justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 0 0 12px;
+    margin-bottom: 25px;
+    scrollbar-width: none;
+  }
+
+  .menu-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-btn {
+    flex-shrink: 0;
+    padding: 8px 17px;
+  }
+
+  .menu-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .menu-card-image {
+    height: 135px;
+  }
+
+  .menu-card-category {
+    top: 8px;
+    inset-inline-start: 8px;
+    padding: 4px 8px;
+    font-size: 8px;
+  }
+
+  .menu-card-content {
+    padding: 12px 10px;
+  }
+
+  .menu-card-title {
+    font-size: 13px;
+    margin-bottom: 5px;
+  }
+
+  .menu-card-description {
+    font-size: 10px;
+    line-height: 1.7;
+    min-height: 48px;
+  }
+
+  .menu-card-bottom {
+    margin-top: 12px;
+    padding-top: 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 9px;
+  }
+
+  .menu-card-price {
+    font-size: 16px;
+  }
+
+  .menu-card-order {
+    width: 100%;
+    text-align: center;
+    padding: 7px 5px;
+    font-size: 9px;
+  }
+
+  .menu-footer {
+    font-size: 9px;
+  }
+
+  /* Experience */
+
+  .experience-section {
+    min-height: 350px;
+  }
+
+  .experience-container h2 {
+    font-size: 27px;
+  }
+
+  .experience-container p {
+    line-height: 2;
+  }
+
+  /* Branches */
+
+  .branches-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .branch-card {
+    padding: 22px;
+  }
+
+  .branch-card h3 {
+    font-size: 20px;
+  }
+
+  .branch-address {
+    font-size: 12px;
+    line-height: 2;
+  }
+
+  .branch-actions {
+    gap: 9px;
+  }
+
+  /* Contact */
+
+  .contact-content {
+    padding: 32px 20px;
+  }
+
+  .contact-content h2 {
+    font-size: 26px;
+  }
+
+  .contact-content > p {
+    font-size: 11px;
+    line-height: 2;
+  }
+
+  .contact-details {
+    flex-direction: column;
+    gap: 17px;
+  }
+
+  .contact-details strong {
+    font-size: 12px;
+  }
+
+  .contact-decoration {
+    min-height: 220px;
+  }
+
+  .contact-decoration-letter {
+    font-size: 95px;
+  }
+
+  .contact-decoration-caption {
+    bottom: 25px;
+    font-size: 8px;
+  }
+
+  /* Footer */
+
+  .site-footer {
+    padding-top: 45px;
+  }
+
+  .footer-main {
+    gap: 15px;
+    padding-bottom: 30px;
+  }
+
+  .footer-nav {
+    gap: 12px 18px;
+  }
+
+  .footer-nav a {
+    font-size: 10px;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 7px;
+    font-size: 9px;
+  }
+
+  .back-to-top {
+    width: 38px;
+    height: 38px;
+    bottom: 15px;
+    inset-inline-end: 15px;
+  }
+}
+
+/* ========== VERY SMALL PHONES ========== */
+
+@media (max-width: 360px) {
+  .container {
+    width: calc(100% - 24px);
+  }
+
+  .brand-text strong {
+    font-size: 12px;
+  }
+
+  .hero h1 {
+    font-size: 36px;
+  }
+
+  .menu-grid {
+    gap: 9px;
+  }
+
+  .menu-card-image {
+    height: 115px;
+  }
+
+  .menu-card-content {
+    padding: 10px 8px;
+  }
+
+  .menu-card-title {
+    font-size: 12px;
+  }
+
+  .menu-card-description {
+    font-size: 9px;
+  }
+
+  .menu-card-price {
+    font-size: 14px;
+  }
+
+  .section-heading h2 {
+    font-size: 26px;
+  }
+}
+
+/* ========== LANDSCAPE MOBILE ========== */
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .hero {
+    height: auto;
+    min-height: 600px;
+  }
+
+  .hero-content {
+    padding-top: 120px;
+    padding-bottom: 80px;
+  }
+
+  .main-nav {
+    overflow-y: auto;
+  }
+}
+
+/* ========== REDUCED MOTION ========== */
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-card,
+  .hero,
+  .about-image-main img {
+    animation: none;
+    transition: none;
+  }
+}
