@@ -1,30 +1,25 @@
 
 /* ========================================
    AL BARDISI RESTAURANT
-   Main JavaScript
+   Main Website Controller
    ======================================== */
 
-(function () {
+(() => {
   "use strict";
-
-  /* ========================================
-     1. CONFIGURATION & STATE
-     ======================================== */
 
   const CONFIG = {
     contentUrl: "./content.json",
     languageKey: "bardisi_lang",
     defaultLanguage: "ar",
-    whatsappMessage: "مرحبًا، أريد الاستفسار عن طلب من مطعم البرديسي."
+    defaultPhone: "01002862600",
+    defaultWhatsApp: "201002862600"
   };
 
-  let siteData = null;
-  let currentLanguage =
-    localStorage.getItem(CONFIG.languageKey) || CONFIG.defaultLanguage;
-
-  if (!["ar", "en"].includes(currentLanguage)) {
-    currentLanguage = CONFIG.defaultLanguage;
-  }
+  const state = {
+    lang: CONFIG.defaultLanguage,
+    data: null,
+    activeCategory: "all"
+  };
 
   const $ = (selector, parent = document) =>
     parent.querySelector(selector);
@@ -32,43 +27,31 @@
   const $$ = (selector, parent = document) =>
     [...parent.querySelectorAll(selector)];
 
-  const translations = window.translations || {};
+  const t = (key) => {
+    const dictionary = window.translations?.[state.lang] || {};
+    return dictionary[key] || key;
+  };
 
   /* ========================================
-     2. HELPERS
+     SAFE HELPERS
      ======================================== */
 
-  function t(key) {
-    return (
-      translations[currentLanguage]?.[key] ||
-      translations.ar?.[key] ||
-      key
-    );
+  function textElement(tag, className, value) {
+    const element = document.createElement(tag);
+
+    if (className) element.className = className;
+    element.textContent = value ?? "";
+
+    return element;
   }
 
-  function getLocalizedValue(arValue, enValue) {
-    if (currentLanguage === "en") {
-      return enValue || arValue || "";
-    }
-
-    return arValue || enValue || "";
-  }
-
-  function cleanPhone(value) {
-    return String(value || "").replace(/[^\d+]/g, "");
-  }
-
-  function normalizeWhatsApp(value) {
-    return String(value || "").replace(/\D/g, "");
-  }
-
-  function safeExternalUrl(value) {
-    if (!value) return "";
+  function safeHttpUrl(value) {
+    if (!value || typeof value !== "string") return "";
 
     try {
-      const url = new URL(value, window.location.href);
+      const url = new URL(value.trim());
 
-      if (!["http:", "https:"].includes(url.protocol)) {
+      if (url.protocol !== "https:" && url.protocol !== "http:") {
         return "";
       }
 
@@ -78,91 +61,56 @@
     }
   }
 
-  function createElement(tag, className, text) {
-    const element = document.createElement(tag);
+  function cleanPhone(value) {
+    return String(value || "").replace(/[^\d+]/g, "");
+  }
 
-    if (className) {
-      element.className = className;
+  function cleanWhatsApp(value) {
+    return String(value || "").replace(/\D/g, "");
+  }
+
+  function currentText(arValue, enValue) {
+    if (state.lang === "en") {
+      return enValue || arValue || "";
     }
 
-    if (text !== undefined && text !== null) {
-      element.textContent = String(text);
-    }
+    return arValue || enValue || "";
+  }
 
+  function createEmptyMessage(message) {
+    const element = document.createElement("div");
+    element.className = "empty-message";
+    element.textContent = message;
     return element;
   }
 
-  function createLink(text, href, className, targetBlank = false) {
-    const link = createElement("a", className, text);
-
-    link.href = href;
-
-    if (targetBlank) {
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-    }
-
-    return link;
-  }
-
-  function createImage(src, alt, className) {
-    const image = createElement("img", className);
-
-    image.alt = alt || "";
-    image.loading = "lazy";
-    image.decoding = "async";
-
-    const safeUrl = safeExternalUrl(src);
-
-    if (safeUrl) {
-      image.src = safeUrl;
-    }
-
-    return image;
-  }
-
-  function showToast(message) {
-    let toast = $("#bardisiToast");
-
-    if (!toast) {
-      toast = createElement("div", "bardisi-toast");
-      toast.id = "bardisiToast";
-      document.body.appendChild(toast);
-    }
-
-    toast.textContent = message;
-    toast.classList.add("show");
-
-    window.clearTimeout(showToast.timeout);
-
-    showToast.timeout = window.setTimeout(() => {
-      toast.classList.remove("show");
-    }, 3000);
-  }
-
   /* ========================================
-     3. LANGUAGE SYSTEM
+     LANGUAGE
      ======================================== */
 
-  function applyLanguage() {
-    document.documentElement.lang = currentLanguage;
-    document.documentElement.dir =
-      currentLanguage === "ar" ? "rtl" : "ltr";
+  function applyTranslations() {
+    const dictionary = window.translations?.[state.lang];
+
+    if (!dictionary) {
+      console.error("Translation dictionary not found:", state.lang);
+      return;
+    }
+
+    document.documentElement.lang = state.lang;
+    document.documentElement.dir = state.lang === "ar" ? "rtl" : "ltr";
 
     $$("[data-i18n]").forEach((element) => {
       const key = element.dataset.i18n;
-      const translation = t(key);
 
-      if (translation) {
-        element.textContent = translation;
+      if (dictionary[key] !== undefined) {
+        element.textContent = dictionary[key];
       }
     });
 
     const languageLabel = $("#languageLabel");
 
     if (languageLabel) {
-      languageLabel.textContent =
-        currentLanguage === "ar" ? "EN" : "عربي";
+      languageLabel.textContent = state.lang === "ar" ? "EN" : "عربي";
     }
 
     const languageButton = $("#languageSwitch");
@@ -170,26 +118,57 @@
     if (languageButton) {
       languageButton.setAttribute(
         "aria-label",
-        currentLanguage === "ar"
-          ? "Switch to English"
-          : "التغيير إلى العربية"
+        state.lang === "ar" ? "Switch to English" : "التبديل إلى العربية"
       );
     }
 
-    localStorage.setItem(CONFIG.languageKey, currentLanguage);
-
     renderMenu();
     renderBranches();
-    updateContactInformation();
+    updateContact();
+
+    if (state.data) {
+      updateDynamicContent();
+    }
   }
 
-  function toggleLanguage() {
-    currentLanguage = currentLanguage === "ar" ? "en" : "ar";
-    applyLanguage();
+  function setLanguage(language) {
+    if (!["ar", "en"].includes(language)) return;
+
+    state.lang = language;
+
+    try {
+      localStorage.setItem(CONFIG.languageKey, language);
+    } catch (error) {
+      console.warn("Language preference could not be saved.", error);
+    }
+
+    applyTranslations();
+  }
+
+  function initLanguage() {
+    let savedLanguage = CONFIG.defaultLanguage;
+
+    try {
+      const stored = localStorage.getItem(CONFIG.languageKey);
+
+      if (stored === "ar" || stored === "en") {
+        savedLanguage = stored;
+      }
+    } catch (error) {
+      console.warn("Language preference unavailable.", error);
+    }
+
+    state.lang = savedLanguage;
+
+    $("#languageSwitch")?.addEventListener("click", () => {
+      setLanguage(state.lang === "ar" ? "en" : "ar");
+    });
+
+    applyTranslations();
   }
 
   /* ========================================
-     4. CONTENT LOADING
+     CONTENT DATA
      ======================================== */
 
   async function loadContent() {
@@ -199,703 +178,590 @@
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP Error: ${response.status}`);
+        throw new Error(`Content request failed: ${response.status}`);
       }
 
       const data = await response.json();
 
       if (!data || typeof data !== "object") {
-        throw new Error("Invalid content format");
+        throw new Error("Invalid content data.");
       }
 
-      siteData = data;
+      state.data = data;
 
+      if (!Array.isArray(state.data.menu)) {
+        state.data.menu = [];
+      }
+
+      if (!Array.isArray(state.data.branches)) {
+        state.data.branches = [];
+      }
+
+      if (!state.data.contact || typeof state.data.contact !== "object") {
+        state.data.contact = {};
+      }
+
+      if (!state.data.content || typeof state.data.content !== "object") {
+        state.data.content = {};
+      }
+
+      updateDynamicContent();
+      updateContact();
       renderMenu();
       renderBranches();
-      updateContactInformation();
-      updateDynamicContent();
 
     } catch (error) {
-      console.error("Bardisi content loading error:", error);
+      console.error("Website content error:", error);
 
-      siteData = {
+      state.data = {
         menu: [],
         branches: [],
         contact: {},
         content: {}
       };
 
-      renderMenu();
-      renderBranches();
-      updateContactInformation();
-
-      showToast(t("error"));
+      renderMenu(t("menuLoadError"));
+      renderBranches(t("branchesLoadError"));
+      updateContact();
     }
   }
-
-  /* ========================================
-     5. DYNAMIC CONTENT
-     ======================================== */
 
   function updateDynamicContent() {
-    if (!siteData?.content) return;
+    if (!state.data?.content) return;
 
-    const content = siteData.content;
+    const content = state.data.content;
 
-    const heroDescription = getLocalizedValue(
-      content.heroDescriptionAr,
-      content.heroDescriptionEn
-    );
+    const heroTitle = state.lang === "ar"
+      ? content.heroTitleAr
+      : content.heroTitleEn;
 
-    const aboutText = getLocalizedValue(
-      content.aboutTextAr,
-      content.aboutTextEn
-    );
+    const heroDescription = state.lang === "ar"
+      ? content.heroDescriptionAr
+      : content.heroDescriptionEn;
 
-    const heroElement = $('[data-i18n="heroDescription"]');
+    const aboutText = state.lang === "ar"
+      ? content.aboutTextAr
+      : content.aboutTextEn;
 
-    if (heroElement && heroDescription) {
-      heroElement.textContent = heroDescription;
+    if (heroTitle) {
+      const first = $("[data-i18n='heroTitleFirst']");
+      const second = $("[data-i18n='heroTitleSecond']");
+
+      if (first && second) {
+        const words = heroTitle.trim().split(/\s+/);
+
+        if (words.length > 1) {
+          first.textContent = words.slice(0, -1).join(" ");
+          second.textContent = words[words.length - 1];
+        } else {
+          first.textContent = heroTitle;
+          second.textContent = "";
+        }
+      }
     }
 
-    const aboutElement = $('[data-i18n="aboutText"]');
-
-    if (aboutElement && aboutText) {
-      aboutElement.textContent = aboutText;
+    if (heroDescription) {
+      const element = $("[data-i18n='heroDescription']");
+      if (element) element.textContent = heroDescription;
     }
 
-    const heroTitle = getLocalizedValue(
-      content.heroTitleAr,
-      content.heroTitleEn
-    );
-
-    const firstTitle = $('[data-i18n="heroTitleFirst"]');
-    const secondTitle = $('[data-i18n="heroTitleSecond"]');
-
-    if (heroTitle && firstTitle && secondTitle) {
-      firstTitle.textContent = heroTitle;
-      secondTitle.textContent = "";
+    if (aboutText) {
+      const element = $("[data-i18n='aboutText']");
+      if (element) element.textContent = aboutText;
     }
   }
 
   /* ========================================
-     6. MENU RENDERING
+     MENU FILTERS
      ======================================== */
 
-  function getMenuItems() {
-    if (!Array.isArray(siteData?.menu)) return [];
+  function getCategories() {
+    const categories = new Set();
 
-    return siteData.menu.filter((item) => {
-      return item && item.active !== false;
+    state.data.menu.forEach((item) => {
+      if (item.active === false || !item.category) return;
+      categories.add(String(item.category).trim());
     });
+
+    return [...categories].filter(Boolean);
   }
 
-  function getMenuCategories(items) {
-    return [
-      ...new Set(
-        items
-          .map((item) => item.category)
-          .filter((category) => {
-            return typeof category === "string" && category.trim();
-          })
-      )
-    ];
-  }
-
-  function renderMenuFilters(items) {
+  function renderMenuFilters() {
     const container = $("#menuFilters");
-
     if (!container) return;
 
     container.replaceChildren();
 
-    const allButton = createElement(
-      "button",
-      "menu-filter active",
-      t("allItems")
-    );
-
+    const allButton = textElement("button", "menu-filter", t("allItems"));
     allButton.type = "button";
     allButton.dataset.category = "all";
 
+    if (state.activeCategory === "all") {
+      allButton.classList.add("active");
+    }
+
     allButton.addEventListener("click", () => {
-      filterMenu("all");
+      state.activeCategory = "all";
+      renderMenu();
     });
 
     container.appendChild(allButton);
 
-    getMenuCategories(items).forEach((category) => {
-      const button = createElement(
-        "button",
-        "menu-filter",
-        category
-      );
-
+    getCategories().forEach((category) => {
+      const button = textElement("button", "menu-filter", category);
       button.type = "button";
       button.dataset.category = category;
 
+      if (state.activeCategory === category) {
+        button.classList.add("active");
+      }
+
       button.addEventListener("click", () => {
-        filterMenu(category);
+        state.activeCategory = category;
+        renderMenu();
       });
 
       container.appendChild(button);
     });
   }
 
-  function filterMenu(category) {
-    const buttons = $$(".menu-filter");
-
-    buttons.forEach((button) => {
-      button.classList.toggle(
-        "active",
-        button.dataset.category === category
-      );
-    });
-
-    $$(".menu-card").forEach((card) => {
-      const matches =
-        category === "all" ||
-        card.dataset.category === category;
-
-      card.hidden = !matches;
-    });
-  }
+  /* ========================================
+     MENU CARDS
+     ======================================== */
 
   function createMenuCard(item) {
-    const card = createElement("article", "menu-card");
+    const card = document.createElement("article");
+    card.className = "menu-card reveal";
 
-    card.dataset.category = item.category || "";
+    const imageUrl = safeHttpUrl(item.image);
 
-    const imageWrapper = createElement(
-      "div",
-      "menu-card-image"
-    );
+    if (imageUrl) {
+      const imageWrap = document.createElement("div");
+      imageWrap.className = "menu-card-image";
 
-    if (item.image) {
-      const image = createImage(
-        item.image,
-        getLocalizedValue(item.nameAr, item.nameEn),
-        ""
-      );
+      const image = document.createElement("img");
+      image.src = imageUrl;
+      image.alt = currentText(item.nameAr, item.nameEn);
+      image.loading = "lazy";
+      image.onerror = () => {
+        imageWrap.classList.add("image-unavailable");
+        image.remove();
+      };
 
-      imageWrapper.appendChild(image);
+      imageWrap.appendChild(image);
+      card.appendChild(imageWrap);
     }
 
-    const content = createElement(
-      "div",
-      "menu-card-content"
-    );
+    const content = document.createElement("div");
+    content.className = "menu-card-content";
 
-    const title = createElement(
+    const title = textElement(
       "h3",
       "menu-card-title",
-      getLocalizedValue(item.nameAr, item.nameEn) ||
-        "Al Bardisi"
+      currentText(item.nameAr, item.nameEn) || "—"
     );
 
-    const descriptionText = getLocalizedValue(
+    const descriptionText = currentText(
       item.descriptionAr,
       item.descriptionEn
     );
 
-    const description = createElement(
+    const description = textElement(
       "p",
       "menu-card-description",
       descriptionText
     );
 
-    const bottom = createElement(
-      "div",
-      "menu-card-bottom"
-    );
-
-    const price = createElement(
-      "span",
-      "menu-card-price"
-    );
-
-    if (item.price !== undefined && item.price !== null && item.price !== "") {
-      price.textContent =
-        `${item.price} ${siteData?.settings?.[
-          currentLanguage === "ar" ? "currencyAr" : "currencyEn"
-        ] || t("currency")}`;
-    } else {
-      price.textContent = t("unavailable");
-    }
-
-    const orderButton = createElement(
-      "a",
-      "menu-card-order",
-      t("orderItem")
-    );
-
-    const whatsapp = normalizeWhatsApp(
-      siteData?.contact?.whatsapp
-    );
-
-    if (whatsapp) {
-      const message = `مرحبًا، أريد طلب: ${
-        getLocalizedValue(item.nameAr, item.nameEn)
-      }`;
-
-      orderButton.href =
-        `https://wa.me/${whatsapp}?text=${encodeURIComponent(message)}`;
-
-      orderButton.target = "_blank";
-      orderButton.rel = "noopener noreferrer";
-    } else {
-      orderButton.href = "#contact";
-    }
-
-    bottom.append(price, orderButton);
     content.append(title);
 
     if (descriptionText) {
       content.appendChild(description);
     }
 
-    content.appendChild(bottom);
+    const bottom = document.createElement("div");
+    bottom.className = "menu-card-bottom";
 
-    card.append(imageWrapper, content);
+    const price = textElement(
+      "strong",
+      "menu-card-price",
+      item.price !== undefined && item.price !== ""
+        ? `${item.price} ${t("currency")}`
+        : ""
+    );
+
+    const order = textElement(
+      "a",
+      "menu-card-order",
+      t("orderItem")
+    );
+
+    const whatsapp = cleanWhatsApp(
+      state.data?.contact?.whatsapp || CONFIG.defaultWhatsApp
+    );
+
+    if (whatsapp) {
+      const message = `${t("whatsappMessage")} ${currentText(
+        item.nameAr,
+        item.nameEn
+      )}`;
+
+      order.href = `https://wa.me/${whatsapp}?text=${encodeURIComponent(message)}`;
+      order.target = "_blank";
+      order.rel = "noopener noreferrer";
+    } else {
+      order.href = "#contact";
+    }
+
+    bottom.append(price, order);
+    content.appendChild(bottom);
+    card.appendChild(content);
 
     return card;
   }
 
-  function renderMenu() {
+  function renderMenu(errorMessage = "") {
     const container = $("#menuGrid");
-
     if (!container) return;
-
-    const items = getMenuItems();
-
-    renderMenuFilters(items);
 
     container.replaceChildren();
 
-    if (!items.length) {
-      const emptyState = createElement(
-        "div",
-        "menu-empty-state"
+    if (!state.data) {
+      container.appendChild(
+        createEmptyMessage(t("loadingMenu"))
       );
-
-      emptyState.appendChild(
-        createElement("h3", "", t("noMenu"))
-      );
-
-      emptyState.appendChild(
-        createElement("p", "", t("noMenuDescription"))
-      );
-
-      container.appendChild(emptyState);
-
       return;
     }
 
-    const fragment = document.createDocumentFragment();
+    renderMenuFilters();
 
-    items.forEach((item) => {
-      fragment.appendChild(createMenuCard(item));
+    const availableItems = state.data.menu.filter(
+      (item) => item && item.active !== false
+    );
+
+    const filteredItems = state.activeCategory === "all"
+      ? availableItems
+      : availableItems.filter(
+          (item) => String(item.category || "").trim() === state.activeCategory
+        );
+
+    if (errorMessage) {
+      container.appendChild(createEmptyMessage(errorMessage));
+      return;
+    }
+
+    if (!filteredItems.length) {
+      container.appendChild(createEmptyMessage(
+        availableItems.length ? t("noMenu") : t("noMenu")
+      ));
+      return;
+    }
+
+    filteredItems.forEach((item) => {
+      container.appendChild(createMenuCard(item));
     });
 
-    container.appendChild(fragment);
-    revealNewElements(container);
+    observeReveals();
   }
 
   /* ========================================
-     7. BRANCHES RENDERING
+     BRANCHES
      ======================================== */
 
-  function getBranches() {
-    if (!Array.isArray(siteData?.branches)) return [];
-
-    return siteData.branches.filter((branch) => {
-      return branch && branch.active !== false;
-    });
-  }
-
   function createBranchCard(branch, index) {
-    const card = createElement("article", "branch-card");
+    const card = document.createElement("article");
+    card.className = "branch-card reveal";
 
-    const number = createElement(
+    const number = textElement(
       "span",
       "branch-number",
       String(index + 1).padStart(2, "0")
     );
 
-    const name = createElement(
+    const name = textElement(
       "h3",
       "branch-name",
-      getLocalizedValue(branch.nameAr, branch.nameEn) ||
-        branch.name ||
-        `${t("branchesTitle")} ${index + 1}`
+      currentText(branch.nameAr, branch.nameEn) || "—"
     );
 
-    const addressText = getLocalizedValue(
+    const addressText = currentText(
       branch.addressAr,
       branch.addressEn
-    ) || branch.address || "";
+    );
 
-    const address = createElement(
+    const address = textElement(
       "p",
       "branch-address",
-      addressText
+      addressText || "—"
     );
 
-    const actions = createElement(
-      "div",
-      "branch-actions"
-    );
+    const content = document.createElement("div");
+    content.className = "branch-content";
+
+    content.append(number, name, address);
+
+    const actions = document.createElement("div");
+    actions.className = "branch-actions";
 
     const phone = cleanPhone(branch.phone);
 
     if (phone) {
-      actions.appendChild(
-        createLink(
-          t("callBranch"),
-          `tel:${phone}`,
-          "branch-action"
-        )
-      );
+      const call = textElement("a", "branch-action", t("callBranch"));
+      call.href = `tel:${phone}`;
+      actions.appendChild(call);
     }
 
-    const mapUrl = safeExternalUrl(branch.map);
+    const mapUrl = safeHttpUrl(branch.map);
 
     if (mapUrl) {
-      actions.appendChild(
-        createLink(
-          t("viewMap"),
-          mapUrl,
-          "branch-action",
-          true
-        )
-      );
+      const map = textElement("a", "branch-action", t("viewMap"));
+      map.href = mapUrl;
+      map.target = "_blank";
+      map.rel = "noopener noreferrer";
+      actions.appendChild(map);
     }
 
-    card.append(number, name);
+    card.append(content);
 
-    if (addressText) {
-      card.appendChild(address);
-    }
-
-    if (actions.children.length) {
+    if (actions.childElementCount) {
       card.appendChild(actions);
     }
 
     return card;
   }
 
-  function renderBranches() {
+  function renderBranches(errorMessage = "") {
     const container = $("#branchesGrid");
-
     if (!container) return;
-
-    const branches = getBranches();
 
     container.replaceChildren();
 
-    if (!branches.length) {
-      const emptyState = createElement(
-        "div",
-        "branches-empty-state"
+    if (!state.data) {
+      container.appendChild(
+        createEmptyMessage(t("loadingBranches"))
       );
-
-      emptyState.appendChild(
-        createElement("h3", "", t("noBranches"))
-      );
-
-      emptyState.appendChild(
-        createElement("p", "", t("noBranchesDescription"))
-      );
-
-      container.appendChild(emptyState);
-
       return;
     }
 
-    const fragment = document.createDocumentFragment();
+    if (errorMessage) {
+      container.appendChild(createEmptyMessage(errorMessage));
+      return;
+    }
+
+    const branches = state.data.branches.filter(
+      (branch) => branch && branch.active !== false
+    );
+
+    if (!branches.length) {
+      container.appendChild(createEmptyMessage(t("noBranches")));
+      return;
+    }
 
     branches.forEach((branch, index) => {
-      fragment.appendChild(
-        createBranchCard(branch, index)
-      );
+      container.appendChild(createBranchCard(branch, index));
     });
 
-    container.appendChild(fragment);
-    revealNewElements(container);
+    observeReveals();
   }
 
   /* ========================================
-     8. CONTACT INFORMATION
+     CONTACT DETAILS
      ======================================== */
 
-  function updateContactInformation() {
-    const contact = siteData?.contact || {};
+  function updateContact() {
+    const contact = state.data?.contact || {};
 
-    const phone = cleanPhone(contact.phone);
-    const whatsapp = normalizeWhatsApp(contact.whatsapp);
+    const phone = cleanPhone(contact.phone || CONFIG.defaultPhone);
+    const whatsapp = cleanWhatsApp(
+      contact.whatsapp || CONFIG.defaultWhatsApp
+    );
 
-    const phoneElement = $("#contactPhone");
+    const phoneLink = $("#contactPhone");
 
-    if (phoneElement && phone) {
-      phoneElement.href = `tel:${phone}`;
+    if (phoneLink) {
+      phoneLink.textContent = contact.phone || CONFIG.defaultPhone;
+      phoneLink.href = phone ? `tel:${phone}` : "#";
     }
 
-    const whatsappElement = $("#contactWhatsApp");
+    const whatsappLink = $("#contactWhatsApp");
+    const mainWhatsApp = $("#contactMainWhatsApp");
 
-    if (whatsappElement && whatsapp) {
-      const message = encodeURIComponent(
-        CONFIG.whatsappMessage
-      );
+    if (whatsappLink) {
+      whatsappLink.textContent = t("sendMessage");
+      whatsappLink.href = whatsapp
+        ? `https://wa.me/${whatsapp}`
+        : "#";
+    }
 
-      whatsappElement.href =
-        `https://wa.me/${whatsapp}?text=${message}`;
-
-      whatsappElement.target = "_blank";
-      whatsappElement.rel = "noopener noreferrer";
+    if (mainWhatsApp) {
+      mainWhatsApp.href = whatsapp
+        ? `https://wa.me/${whatsapp}`
+        : "#";
     }
 
     const socialContainer = $("#socialLinks");
 
     if (socialContainer) {
       $$("a[data-social]", socialContainer).forEach((link) => {
-        const platform = link.dataset.social;
-        const url = safeExternalUrl(contact[platform]);
+        const key = link.dataset.social;
+        const url = safeHttpUrl(contact[key]);
 
         if (url) {
           link.href = url;
+          link.hidden = false;
           link.target = "_blank";
           link.rel = "noopener noreferrer";
-          link.hidden = false;
         } else {
           link.hidden = true;
+          link.removeAttribute("href");
         }
       });
     }
   }
 
   /* ========================================
-     9. MOBILE NAVIGATION
+     HEADER & MOBILE NAVIGATION
      ======================================== */
 
-  function initMobileNavigation() {
+  function closeMobileMenu() {
+    const nav = $("#mainNav");
+    const toggle = $("#menuToggle");
+
+    nav?.classList.remove("open");
+    toggle?.classList.remove("active");
+    toggle?.setAttribute("aria-expanded", "false");
+  }
+
+  function initNavigation() {
     const toggle = $("#menuToggle");
     const nav = $("#mainNav");
 
-    if (!toggle || !nav) return;
+    toggle?.addEventListener("click", () => {
+      const isOpen = nav?.classList.toggle("open");
 
-    function closeMenu() {
-      nav.classList.remove("open");
-      toggle.classList.remove("active");
-
-      toggle.setAttribute("aria-expanded", "false");
-    }
-
-    toggle.addEventListener("click", () => {
-      const isOpen = nav.classList.toggle("open");
-
-      toggle.classList.toggle("active", isOpen);
-      toggle.setAttribute("aria-expanded", String(isOpen));
+      toggle.classList.toggle("active", Boolean(isOpen));
+      toggle.setAttribute("aria-expanded", String(Boolean(isOpen)));
     });
 
-    $$(".main-nav a").forEach((link) => {
-      link.addEventListener("click", closeMenu);
+    $$(".nav-link").forEach((link) => {
+      link.addEventListener("click", closeMobileMenu);
     });
 
     document.addEventListener("click", (event) => {
       if (
+        nav?.classList.contains("open") &&
         !nav.contains(event.target) &&
-        !toggle.contains(event.target)
+        !toggle?.contains(event.target)
       ) {
-        closeMenu();
-      }
-    });
-
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        closeMenu();
+        closeMobileMenu();
       }
     });
   }
-
-  /* ========================================
-     10. HEADER SCROLL EFFECT
-     ======================================== */
 
   function initHeaderScroll() {
     const header = $("#header");
+    const backToTop = $("#backToTop");
 
-    if (!header) return;
+    const update = () => {
+      const scrolled = window.scrollY > 35;
 
-    function updateHeader() {
-      header.classList.toggle(
-        "scrolled",
-        window.scrollY > 40
-      );
-    }
+      header?.classList.toggle("scrolled", scrolled);
+      backToTop?.classList.toggle("visible", window.scrollY > 450);
+    };
 
-    window.addEventListener("scroll", updateHeader, {
-      passive: true
+    window.addEventListener("scroll", update, { passive: true });
+    update();
+
+    backToTop?.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
-
-    updateHeader();
   }
-
-  /* ========================================
-     11. ACTIVE NAVIGATION
-     ======================================== */
 
   function initActiveNavigation() {
     const sections = $$("main section[id]");
-    const navLinks = $$(".main-nav a[href^='#']");
-
-    if (!sections.length || !navLinks.length) return;
 
     if (!("IntersectionObserver" in window)) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
 
-          navLinks.forEach((link) => {
-            link.classList.toggle(
-              "active",
-              link.getAttribute("href") === `#${entry.target.id}`
-            );
-          });
+        $$(".nav-link").forEach((link) => {
+          link.classList.toggle(
+            "active",
+            link.getAttribute("href") === `#${entry.target.id}`
+          );
         });
-      },
-      {
-        rootMargin: "-35% 0px -55% 0px"
-      }
-    );
-
-    sections.forEach((section) => {
-      observer.observe(section);
+      });
+    }, {
+      rootMargin: "-35% 0px -55% 0px"
     });
+
+    sections.forEach((section) => observer.observe(section));
   }
 
   /* ========================================
-     12. REVEAL ANIMATIONS
+     REVEAL ANIMATIONS
      ======================================== */
 
   let revealObserver = null;
 
-  function initRevealAnimations() {
-    const elements = $$(".reveal");
+  function observeReveals() {
+    const elements = $$(".reveal:not(.visible)");
 
     if (!elements.length) return;
 
     if (!("IntersectionObserver" in window)) {
-      elements.forEach((element) => {
-        element.classList.add("visible");
-      });
-
+      elements.forEach((element) => element.classList.add("visible"));
       return;
     }
 
-    revealObserver = new IntersectionObserver(
-      (entries, observer) => {
+    if (!revealObserver) {
+      revealObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add("visible");
             observer.unobserve(entry.target);
           }
         });
-      },
-      {
-        threshold: 0.12
-      }
-    );
-
-    elements.forEach((element) => {
-      revealObserver.observe(element);
-    });
-  }
-
-  function revealNewElements(container) {
-    if (!container) return;
-
-    const elements = $$(".reveal", container);
-
-    if (!("IntersectionObserver" in window)) {
-      elements.forEach((element) => {
-        element.classList.add("visible");
+      }, {
+        threshold: 0.08,
+        rootMargin: "0px 0px -35px 0px"
       });
-
-      return;
     }
 
-    elements.forEach((element) => {
-      if (revealObserver) {
-        revealObserver.observe(element);
-      } else {
-        element.classList.add("visible");
-      }
-    });
+    elements.forEach((element) => revealObserver.observe(element));
   }
 
   /* ========================================
-     13. BACK TO TOP
-     ======================================== */
-
-  function initBackToTop() {
-    const button = $("#backToTop");
-
-    if (!button) return;
-
-    window.addEventListener(
-      "scroll",
-      () => {
-        button.classList.toggle(
-          "visible",
-          window.scrollY > 400
-        );
-      },
-      { passive: true }
-    );
-
-    button.addEventListener("click", () => {
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
-    });
-  }
-
-  /* ========================================
-     14. PRELOADER
+     PRELOADER
      ======================================== */
 
   function hidePreloader() {
     const preloader = $("#preloader");
-
     if (!preloader) return;
 
     preloader.classList.add("loaded");
 
-    window.setTimeout(() => {
-      preloader.remove();
-    }, 800);
+    setTimeout(() => {
+      preloader.hidden = true;
+    }, 650);
   }
 
   function initPreloader() {
     if (document.readyState === "complete") {
       hidePreloader();
     } else {
-      window.addEventListener("load", hidePreloader, {
-        once: true
-      });
-    }
+      window.addEventListener("load", hidePreloader, { once: true });
 
-    window.setTimeout(hidePreloader, 4000);
+      setTimeout(hidePreloader, 3500);
+    }
   }
 
   /* ========================================
-     15. FOOTER YEAR
+     FOOTER
      ======================================== */
 
-  function updateFooterYear() {
+  function initFooter() {
     const year = $("#currentYear");
 
     if (year) {
@@ -904,62 +770,25 @@
   }
 
   /* ========================================
-     16. LANGUAGE BUTTON
-     ======================================== */
-
-  function initLanguageSwitch() {
-    const button = $("#languageSwitch");
-
-    if (!button) return;
-
-    button.addEventListener("click", toggleLanguage);
-  }
-
-  /* ========================================
-     17. GLOBAL LINK SAFETY
-     ======================================== */
-
-  function initExternalLinks() {
-    $$('a[target="_blank"]').forEach((link) => {
-      link.rel = "noopener noreferrer";
-    });
-  }
-
-  /* ========================================
-     18. INITIALIZATION
+     START
      ======================================== */
 
   async function init() {
-    applyLanguage();
-
-    initPreloader();
-    initMobileNavigation();
+    initLanguage();
+    initNavigation();
     initHeaderScroll();
     initActiveNavigation();
-    initRevealAnimations();
-    initBackToTop();
-    initLanguageSwitch();
-    updateFooterYear();
-    initExternalLinks();
+    initFooter();
+    initPreloader();
+
+    observeReveals();
 
     await loadContent();
-
-    updateDynamicContent();
-    applyLanguage();
-    initExternalLinks();
-
-    console.log(
-      "%c AL BARDISI RESTAURANT ",
-      "background:#c9a227;color:#17130f;padding:8px 14px;font-weight:bold;"
-    );
-
-    console.log("Website initialized successfully.");
+    observeReveals();
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init, {
-      once: true
-    });
+    document.addEventListener("DOMContentLoaded", init, { once: true });
   } else {
     init();
   }
