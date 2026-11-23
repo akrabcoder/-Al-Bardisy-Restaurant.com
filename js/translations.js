@@ -1,12 +1,11 @@
 
 /* ========================================
-   Al Bardisi Restaurant
-   Arabic & English Translations
+   AL BARDISI - TRANSLATIONS
+   Arabic / English
    ======================================== */
 
 window.translations = {
   ar: {
-    // Brand & Navigation
     brandName: "مطعم البرديسي",
     navHome: "الرئيسية",
     navAbout: "عن المطعم",
@@ -15,153 +14,122 @@ window.translations = {
     navContact: "تواصل معنا",
     orderNow: "اطلب الآن",
 
-    // Hero Section
-    heroEyebrow: "أصالة الطعم المصري",
+    heroEyebrow: "تجربة بطعم مختلف",
     heroTitleFirst: "مطعم",
     heroTitleSecond: "البرديسي",
-    heroDescription:
-      "تجربة طعام تجمع بين أصالة المذاق وجودة المكونات وكرم الضيافة.",
-    exploreMenu: "اكتشف قائمتنا",
-    discoverUs: "اكتشف المطعم",
-    heroBottom: "طعم أصيل.. تجربة لا تُنسى",
+    heroDescription: "أهلاً بكم في مطعم البرديسي، حيث تلتقي النكهة المميزة مع كرم الضيافة.",
+    exploreMenu: "اكتشف قائمة الطعام",
+    discoverUs: "اكتشف قصتنا",
+    heroBottom: "جودة نعتز بها • مذاق لا يُنسى",
 
-    // About Section
-    aboutKicker: "حكاية من الطعم الأصيل",
-    aboutTitle: "عن المطعم",
-    aboutSubtitle: "حكاية جودة واهتمام بالتفاصيل",
-    aboutHeading: "أكثر من مجرد وجبة",
-    aboutText:
-      "في مطعم البرديسي، نهتم بتقديم تجربة مميزة تجمع بين جودة الطعام وأصالة المذاق وحسن الاستقبال.",
-    aboutLink: "اعرف المزيد",
+    aboutKicker: "حكاية مذاق",
+    aboutTitle: "أهلاً بكم في عالم البرديسي",
+    aboutSubtitle: "الطعم المميز يبدأ من التفاصيل.",
+    aboutHeading: "أكثر من مجرد مطعم",
+    aboutText: "نرحب بكم في مطعم البرديسي. نسعى دائمًا لتقديم تجربة طعام مميزة وخدمة تليق بضيوفنا.",
+    aboutLink: "تعرف على فروعنا",
 
-    // Menu Section
-    menuKicker: "اختياراتنا المميزة",
+    menuKicker: "اختياراتنا",
     menuTitle: "قائمة الطعام",
-    menuSubtitle: "اكتشف مجموعة من أطباقنا واستمتع بتجربة مميزة",
-    allItems: "كل الأصناف",
-    loadingMenu: "جاري تحميل قائمة الطعام...",
-    menuFooter: "جودة تستحق التجربة",
-    noMenu: "قائمة الطعام غير متاحة حاليًا",
-    noMenuDescription: "نعمل على تحديث قائمتنا، يرجى زيارتنا قريبًا.",
-    orderItem: "اطلب الآن",
-    currency: "جنيه",
-    categoryAll: "الكل",
+    menuSubtitle: "اكتشف مجموعة من اختياراتنا.",
+    allItems: "الكل",
+    loadingMenu: "جارٍ تحميل قائمة الطعام...",
+    menuFooter: "للطلب والاستفسار، تواصل معنا مباشرة.",
 
-    // Experience Section
-    experienceKicker: "تجربة مختلفة",
-    experienceTitle: "الطعم الأصيل في كل تفصيلة",
-    experienceText:
-      "نؤمن أن التجربة المميزة تبدأ من جودة المكونات وتنتهي برضا ضيوفنا.",
+    experienceKicker: "تجربة البرديسي",
+    experienceTitle: "لحظات تستحق أن تعيشها",
+    experienceText: "ننتظركم لتستمتعوا بتجربة تجمع بين المذاق والضيافة.",
     findBranch: "اعثر على أقرب فرع",
 
-    // Branches Section
     branchesKicker: "نحن بالقرب منك",
     branchesTitle: "فروعنا",
-    branchesSubtitle: "يسعدنا استقبالكم في فروع مطعم البرديسي",
-    loadingBranches: "جاري تحميل الفروع...",
-    noBranches: "لا توجد فروع مضافة حاليًا",
-    noBranchesDescription: "سيتم إضافة بيانات الفروع قريبًا.",
-    viewMap: "عرض الموقع",
-    callBranch: "اتصل بالفرع",
+    branchesSubtitle: "اختر الفرع الأقرب إليك.",
+    loadingBranches: "جارٍ تحميل الفروع...",
 
-    // Contact Section
-    contactKicker: "نسعد بتواصلكم",
+    contactKicker: "يسعدنا تواصلك",
     contactTitle: "تواصل معنا",
     contactText: "نحن هنا للإجابة عن استفساراتكم واستقبال طلباتكم.",
     phoneLabel: "اتصل بنا",
     whatsappLabel: "واتساب",
-    sendMessage: "راسلنا الآن",
+    sendMessage: "أرسل لنا رسالة",
 
-    // Footer
-    footerDescription:
-      "مطعم البرديسي.. تجربة تجمع بين أصالة المذاق وجودة الضيافة.",
-    rightsReserved: "جميع الحقوق محفوظة",
+    footerDescription: "مطعم البرديسي، نرحب بكم دائمًا.",
+    rightsReserved: "جميع الحقوق محفوظة لمطعم البرديسي.",
 
-    // General
-    loading: "جاري التحميل...",
-    error: "حدث خطأ أثناء تحميل البيانات",
-    retry: "حاول مرة أخرى",
-    unavailable: "غير متاح",
-    languageName: "العربية"
+    noMenu: "لا توجد أصناف متاحة حاليًا.",
+    noBranches: "سيتم الإعلان عن الفروع قريبًا.",
+    orderItem: "اطلب عبر واتساب",
+    callBranch: "اتصل بالفرع",
+    viewMap: "عرض الموقع على الخريطة",
+    currency: "جنيه",
+    menuLoadError: "تعذر تحميل قائمة الطعام.",
+    branchesLoadError: "تعذر تحميل بيانات الفروع.",
+    whatsappMessage: "مرحبًا، أريد الاستفسار عن",
+    menuCategory: "التصنيف",
+    itemUnavailable: "غير متاح حاليًا"
   },
 
   en: {
-    // Brand & Navigation
     brandName: "Al Bardisi Restaurant",
     navHome: "Home",
     navAbout: "About",
     navMenu: "Our Menu",
     navBranches: "Branches",
-    navContact: "Contact Us",
+    navContact: "Contact",
     orderNow: "Order Now",
 
-    // Hero Section
-    heroEyebrow: "The Authentic Egyptian Taste",
+    heroEyebrow: "A Different Taste Experience",
     heroTitleFirst: "Al",
     heroTitleSecond: "Bardisi",
-    heroDescription:
-      "A dining experience combining authentic flavors, quality ingredients, and warm hospitality.",
+    heroDescription: "Welcome to Al Bardisi Restaurant, where distinctive flavors meet warm hospitality.",
     exploreMenu: "Explore Our Menu",
-    discoverUs: "Discover Us",
-    heroBottom: "Authentic Taste.. Unforgettable Experience",
+    discoverUs: "Discover Our Story",
+    heroBottom: "Quality We Value • Taste to Remember",
 
-    // About Section
-    aboutKicker: "A Story of Authentic Taste",
-    aboutTitle: "About Us",
-    aboutSubtitle: "A Story of Quality and Attention to Detail",
-    aboutHeading: "More Than Just a Meal",
-    aboutText:
-      "At Al Bardisi Restaurant, we strive to offer a memorable experience through quality food, authentic flavors, and warm hospitality.",
-    aboutLink: "Discover More",
+    aboutKicker: "Our Story",
+    aboutTitle: "Welcome to the World of Al Bardisi",
+    aboutSubtitle: "Great taste starts with the details.",
+    aboutHeading: "More Than Just a Restaurant",
+    aboutText: "Welcome to Al Bardisi Restaurant. We always strive to offer a memorable dining experience and hospitality worthy of our guests.",
+    aboutLink: "Discover Our Branches",
 
-    // Menu Section
-    menuKicker: "Our Special Selection",
+    menuKicker: "Our Selection",
     menuTitle: "Our Menu",
-    menuSubtitle: "Explore our selection of dishes and enjoy a special experience.",
-    allItems: "All Items",
+    menuSubtitle: "Discover a selection of our offerings.",
+    allItems: "All",
     loadingMenu: "Loading menu...",
-    menuFooter: "Quality Worth Experiencing",
-    noMenu: "Our menu is currently unavailable",
-    noMenuDescription: "We are updating our menu. Please visit us again soon.",
-    orderItem: "Order Now",
-    currency: "EGP",
-    categoryAll: "All",
+    menuFooter: "For orders and inquiries, contact us directly.",
 
-    // Experience Section
-    experienceKicker: "A Different Experience",
-    experienceTitle: "Authentic Taste in Every Detail",
-    experienceText:
-      "We believe that an exceptional experience begins with quality ingredients and ends with our guests' satisfaction.",
+    experienceKicker: "The Al Bardisi Experience",
+    experienceTitle: "Moments Worth Experiencing",
+    experienceText: "We look forward to welcoming you for a memorable dining experience.",
     findBranch: "Find Your Nearest Branch",
 
-    // Branches Section
-    branchesKicker: "We Are Near You",
+    branchesKicker: "Close to You",
     branchesTitle: "Our Branches",
-    branchesSubtitle: "We look forward to welcoming you at Al Bardisi Restaurant.",
+    branchesSubtitle: "Choose the branch nearest to you.",
     loadingBranches: "Loading branches...",
-    noBranches: "No branches have been added yet",
-    noBranchesDescription: "Branch information will be available soon.",
-    viewMap: "View Location",
-    callBranch: "Call Branch",
 
-    // Contact Section
-    contactKicker: "We Would Love to Hear From You",
+    contactKicker: "We'd Love to Hear From You",
     contactTitle: "Contact Us",
-    contactText: "We are here to answer your questions and receive your orders.",
+    contactText: "We are here to answer your questions and receive your inquiries.",
     phoneLabel: "Call Us",
     whatsappLabel: "WhatsApp",
     sendMessage: "Send Us a Message",
 
-    // Footer
-    footerDescription:
-      "Al Bardisi Restaurant.. An experience of authentic flavors and warm hospitality.",
-    rightsReserved: "All Rights Reserved",
+    footerDescription: "Al Bardisi Restaurant. You are always welcome.",
+    rightsReserved: "All rights reserved to Al Bardisi Restaurant.",
 
-    // General
-    loading: "Loading...",
-    error: "An error occurred while loading data",
-    retry: "Try Again",
-    unavailable: "Unavailable",
-    languageName: "English"
+    noMenu: "No menu items are currently available.",
+    noBranches: "Our branches will be announced soon.",
+    orderItem: "Order via WhatsApp",
+    callBranch: "Call Branch",
+    viewMap: "View on Map",
+    currency: "EGP",
+    menuLoadError: "Unable to load the menu.",
+    branchesLoadError: "Unable to load branch information.",
+    whatsappMessage: "Hello, I would like to ask about",
+    menuCategory: "Category",
+    itemUnavailable: "Currently unavailable"
   }
 };
