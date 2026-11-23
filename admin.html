@@ -1,0 +1,524 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#17120d">
+    <title>Al Bardisi | Admin Dashboard</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+
+<body>
+
+    <div class="login-screen" id="loginScreen">
+        <div class="login-card">
+            <div class="brand-mark">البرديسي</div>
+            <span class="eyebrow">RESTAURANT MANAGEMENT</span>
+
+            <h1>لوحة الإدارة</h1>
+            <p>سجّل الدخول لإدارة محتوى مطعم البرديسي.</p>
+
+            <form id="loginForm">
+                <label for="adminPassword">كلمة المرور</label>
+                <input
+                    type="password"
+                    id="adminPassword"
+                    placeholder="أدخل كلمة المرور"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <button type="submit" id="loginButton">
+                    تسجيل الدخول
+                </button>
+
+                <p class="form-message" id="loginMessage"></p>
+            </form>
+
+            <a href="index.html" class="back-link">العودة إلى الموقع</a>
+        </div>
+    </div>
+
+
+    <div class="dashboard hidden" id="dashboard">
+
+        <aside class="sidebar" id="sidebar">
+
+            <div class="sidebar-brand">
+                <div class="brand-mark">البرديسي</div>
+                <span>ADMIN PANEL</span>
+            </div>
+
+            <div class="admin-profile">
+                <div class="profile-icon">A</div>
+                <div>
+                    <strong>مدير المطعم</strong>
+                    <small>Administrator</small>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+
+                <button class="nav-item active" data-section="overview">
+                    <span>▦</span>
+                    <span>الرئيسية</span>
+                </button>
+
+                <button class="nav-item" data-section="menu">
+                    <span>☷</span>
+                    <span>إدارة المنيو</span>
+                </button>
+
+                <button class="nav-item" data-section="branches">
+                    <span>⌖</span>
+                    <span>الفروع</span>
+                </button>
+
+                <button class="nav-item" data-section="contact">
+                    <span>☎</span>
+                    <span>التواصل</span>
+                </button>
+
+                <button class="nav-item" data-section="content">
+                    <span>✎</span>
+                    <span>محتوى الموقع</span>
+                </button>
+
+                <button class="nav-item" data-section="settings">
+                    <span>⚙</span>
+                    <span>الإعدادات</span>
+                </button>
+
+            </nav>
+
+            <div class="sidebar-bottom">
+                <a href="index.html" target="_blank">زيارة الموقع ↗</a>
+                <button id="logoutButton" class="logout-button">
+                    تسجيل الخروج
+                </button>
+            </div>
+
+        </aside>
+
+
+        <main class="main-content">
+
+            <header class="topbar">
+                <button class="mobile-menu-button" id="mobileMenuButton">
+                    ☰
+                </button>
+
+                <div>
+                    <span class="eyebrow">AL BARDISI RESTAURANT</span>
+                    <h2 id="pageTitle">الرئيسية</h2>
+                </div>
+
+                <div class="topbar-actions">
+                    <span class="status-indicator">متصل</span>
+                    <button id="refreshButton" title="تحديث البيانات">↻</button>
+                </div>
+            </header>
+
+
+            <div class="content-area">
+
+                <!-- OVERVIEW -->
+                <section class="dashboard-section active" id="section-overview">
+
+                    <div class="welcome-card">
+                        <div>
+                            <span class="eyebrow">CONTROL CENTER</span>
+                            <h1>أهلاً بك في إدارة البرديسي</h1>
+                            <p>من هنا تقدر تتحكم في محتوى موقع المطعم.</p>
+                        </div>
+                        <div class="welcome-decoration">البرديسي</div>
+                    </div>
+
+                    <div class="stats-grid">
+
+                        <div class="stat-card">
+                            <span>إجمالي المنتجات</span>
+                            <strong id="totalProducts">0</strong>
+                            <small>منتجات المنيو</small>
+                        </div>
+
+                        <div class="stat-card">
+                            <span>عدد الفروع</span>
+                            <strong id="totalBranches">0</strong>
+                            <small>فروع المطعم</small>
+                        </div>
+
+                        <div class="stat-card">
+                            <span>حالة الموقع</span>
+                            <strong class="stat-status">نشط</strong>
+                            <small>الموقع متاح للزوار</small>
+                        </div>
+
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-heading">
+                            <div>
+                                <span class="eyebrow">QUICK ACCESS</span>
+                                <h3>الوصول السريع</h3>
+                            </div>
+                        </div>
+
+                        <div class="quick-actions">
+                            <button data-goto="menu">إدارة المنيو</button>
+                            <button data-goto="branches">إدارة الفروع</button>
+                            <button data-goto="contact">تعديل التواصل</button>
+                            <button data-goto="content">تعديل المحتوى</button>
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-heading">
+                            <div>
+                                <span class="eyebrow">SYSTEM STATUS</span>
+                                <h3>حالة الاتصال</h3>
+                            </div>
+                        </div>
+
+                        <p id="connectionStatus">
+                            في انتظار الاتصال بالخادم...
+                        </p>
+                    </div>
+
+                </section>
+
+
+                <!-- MENU -->
+                <section class="dashboard-section" id="section-menu">
+
+                    <div class="section-heading">
+                        <div>
+                            <span class="eyebrow">MENU MANAGEMENT</span>
+                            <h2>إدارة المنيو</h2>
+                            <p>إضافة وتعديل وحذف المنتجات والأسعار والصور.</p>
+                        </div>
+
+                        <button class="primary-button" id="addProductButton">
+                            + إضافة منتج
+                        </button>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>الصورة</th>
+                                        <th>اسم المنتج</th>
+                                        <th>القسم</th>
+                                        <th>السعر</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="productsTable">
+                                    <tr>
+                                        <td colspan="5">جاري تحميل المنتجات...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </section>
+
+
+                <!-- BRANCHES -->
+                <section class="dashboard-section" id="section-branches">
+
+                    <div class="section-heading">
+                        <div>
+                            <span class="eyebrow">BRANCH MANAGEMENT</span>
+                            <h2>إدارة الفروع</h2>
+                            <p>تعديل عناوين الفروع وروابط الخرائط وأرقام الاتصال.</p>
+                        </div>
+
+                        <button class="primary-button" id="addBranchButton">
+                            + إضافة فرع
+                        </button>
+                    </div>
+
+                    <div class="branches-list" id="branchesList">
+                        <p>جاري تحميل الفروع...</p>
+                    </div>
+
+                </section>
+
+
+                <!-- CONTACT -->
+                <section class="dashboard-section" id="section-contact">
+
+                    <div class="section-heading">
+                        <div>
+                            <span class="eyebrow">CONTACT INFORMATION</span>
+                            <h2>بيانات التواصل</h2>
+                            <p>تعديل أرقام الهاتف وروابط التواصل الاجتماعي.</p>
+                        </div>
+                    </div>
+
+                    <form id="contactForm" class="panel-card settings-form">
+
+                        <div class="form-group">
+                            <label for="phone">رقم الهاتف</label>
+                            <input id="phone" type="tel" placeholder="01000000000">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="whatsapp">رقم واتساب</label>
+                            <input id="whatsapp" type="tel" placeholder="201000000000">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="facebook">رابط فيسبوك</label>
+                            <input id="facebook" type="url" placeholder="https://facebook.com/...">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="instagram">رابط إنستجرام</label>
+                            <input id="instagram" type="url" placeholder="https://instagram.com/...">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tiktok">رابط تيك توك</label>
+                            <input id="tiktok" type="url" placeholder="https://tiktok.com/@...">
+                        </div>
+
+                        <button class="primary-button" type="submit">
+                            حفظ بيانات التواصل
+                        </button>
+
+                    </form>
+
+                </section>
+
+
+                <!-- CONTENT -->
+                <section class="dashboard-section" id="section-content">
+
+                    <div class="section-heading">
+                        <div>
+                            <span class="eyebrow">WEBSITE CONTENT</span>
+                            <h2>محتوى الموقع</h2>
+                            <p>تعديل النصوص الرئيسية الظاهرة للزوار.</p>
+                        </div>
+                    </div>
+
+                    <form id="contentForm" class="panel-card settings-form">
+
+                        <div class="form-group">
+                            <label for="heroTitleAr">عنوان الصفحة الرئيسية - عربي</label>
+                            <input id="heroTitleAr" type="text">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="heroTitleEn">عنوان الصفحة الرئيسية - إنجليزي</label>
+                            <input id="heroTitleEn" type="text">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="heroDescriptionAr">الوصف - عربي</label>
+                            <textarea id="heroDescriptionAr" rows="4"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="heroDescriptionEn">الوصف - إنجليزي</label>
+                            <textarea id="heroDescriptionEn" rows="4"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="aboutTextAr">من نحن - عربي</label>
+                            <textarea id="aboutTextAr" rows="5"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="aboutTextEn">About Us - English</label>
+                            <textarea id="aboutTextEn" rows="5"></textarea>
+                        </div>
+
+                        <button class="primary-button" type="submit">
+                            حفظ المحتوى
+                        </button>
+
+                    </form>
+
+                </section>
+
+
+                <!-- SETTINGS -->
+                <section class="dashboard-section" id="section-settings">
+
+                    <div class="section-heading">
+                        <div>
+                            <span class="eyebrow">SYSTEM SETTINGS</span>
+                            <h2>الإعدادات</h2>
+                            <p>إعدادات الاتصال وحفظ بيانات الموقع.</p>
+                        </div>
+                    </div>
+
+                    <div class="panel-card settings-form">
+
+                        <div class="form-group">
+                            <label for="workerUrl">رابط Cloudflare Worker</label>
+                            <input
+                                id="workerUrl"
+                                type="url"
+                                placeholder="https://your-worker.workers.dev"
+                            >
+                            <small>يتم حفظ الرابط محلياً في هذا المتصفح.</small>
+                        </div>
+
+                        <button class="primary-button" id="saveWorkerUrl">
+                            حفظ رابط الخادم
+                        </button>
+
+                        <div class="divider"></div>
+
+                        <div class="danger-zone">
+                            <h3>تسجيل الخروج</h3>
+                            <p>إنهاء جلسة الإدارة الحالية.</p>
+                            <button class="danger-button" id="settingsLogout">
+                                تسجيل الخروج
+                            </button>
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+            <footer class="dashboard-footer">
+                <span>AL BARDISI RESTAURANT</span>
+                <span>ADMIN DASHBOARD</span>
+            </footer>
+
+        </main>
+
+    </div>
+
+
+    <!-- PRODUCT MODAL -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal-card">
+
+            <div class="modal-header">
+                <h2 id="productModalTitle">إضافة منتج</h2>
+                <button class="close-modal" data-close="productModal">×</button>
+            </div>
+
+            <form id="productForm">
+
+                <input type="hidden" id="productId">
+
+                <div class="form-group">
+                    <label for="productNameAr">اسم المنتج بالعربي</label>
+                    <input id="productNameAr" type="text" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="productNameEn">اسم المنتج بالإنجليزي</label>
+                    <input id="productNameEn" type="text" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="productCategory">القسم</label>
+                    <input id="productCategory" type="text" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="productPrice">السعر بالجنيه</label>
+                    <input id="productPrice" type="number" min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="productImage">رابط الصورة</label>
+                    <input id="productImage" type="url" placeholder="https://...">
+                </div>
+
+                <div class="form-group">
+                    <label for="productDescriptionAr">الوصف بالعربي</label>
+                    <textarea id="productDescriptionAr" rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="productDescriptionEn">الوصف بالإنجليزي</label>
+                    <textarea id="productDescriptionEn" rows="3"></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="primary-button">حفظ المنتج</button>
+                    <button type="button" class="secondary-button" data-close="productModal">إلغاء</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+
+    <!-- BRANCH MODAL -->
+    <div class="modal-overlay" id="branchModal">
+        <div class="modal-card">
+
+            <div class="modal-header">
+                <h2 id="branchModalTitle">إضافة فرع</h2>
+                <button class="close-modal" data-close="branchModal">×</button>
+            </div>
+
+            <form id="branchForm">
+
+                <input type="hidden" id="branchId">
+
+                <div class="form-group">
+                    <label for="branchName">اسم الفرع</label>
+                    <input id="branchName" type="text" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="branchAddressAr">العنوان بالعربي</label>
+                    <input id="branchAddressAr" type="text" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="branchAddressEn">العنوان بالإنجليزي</label>
+                    <input id="branchAddressEn" type="text">
+                </div>
+
+                <div class="form-group">
+                    <label for="branchPhone">رقم الهاتف</label>
+                    <input id="branchPhone" type="tel">
+                </div>
+
+                <div class="form-group">
+                    <label for="branchMap">رابط خرائط Google</label>
+                    <input id="branchMap" type="url">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="primary-button">حفظ الفرع</button>
+                    <button type="button" class="secondary-button" data-close="branchModal">إلغاء</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+
+    <div class="toast" id="toast"></div>
+
+    <script src="js/admin.js"></script>
+
+</body>
+</html>
